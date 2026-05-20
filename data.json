@@ -1,4 +1,14 @@
 {
-  "transactions": [],
-  "timestamp": "2026-05-20T09:37:45.797Z"
+  "transactions": [
+    {
+      "id": 1779270058750,
+      "type": "income",
+      "category": "Office",
+      "subCategory": "Salary",
+      "amount": 50000,
+      "locationOrMethod": "Bank",
+      "date": "2026-05-20"
+    }
+  ],
+  "timestamp": "2026-05-20T09:40:58.754Z"
 }
