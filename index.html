@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BDT Money Manager - Free Cloud Sync</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
+        body { background: #f0f4f8; padding: 20px; }
+        .app-container { max-width: 1400px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; background: white; padding: 16px 24px; border-radius: 32px; margin-bottom: 25px; }
+        .logo-area h1 { background: linear-gradient(135deg, #0f2b3d, #1e7e34); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .sync-status { background: #e2e8f0; padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; }
+        .balance-card { background: #1e293b; padding: 10px 20px; border-radius: 40px; color: white; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        @media (max-width: 800px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .card { background: white; border-radius: 28px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 18px; border-left: 6px solid; padding-left: 14px; }
+        .income-title { border-left-color: #10b981; }
+        .expense-title { border-left-color: #ef4444; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        select, input, button { padding: 12px; border-radius: 60px; border: 1px solid #e2e8f0; flex: 1; min-width: 120px; }
+        button { background: #0f172a; color: white; cursor: pointer; font-weight: 600; }
+        button:hover { background: #1e293b; }
+        .summary-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+        .stat-badge { background: #f1f5f9; border-radius: 28px; padding: 8px 14px; }
+        .savings-card { background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 28px; padding: 12px 20px; text-align: center; margin-bottom: 20px; }
+        .savings-card .savings-amount { font-size: 2rem; font-weight: bold; }
+        .report-chart-container { display: flex; flex-wrap: wrap; gap: 24px; }
+        .report-section { background: white; border-radius: 28px; padding: 20px; flex: 2; }
+        .chart-section { background: white; border-radius: 28px; padding: 20px; flex: 1; }
+        canvas { max-height: 280px; width: 100% !important; }
+        .report-filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-btn { background: #eef2ff; border: none; padding: 8px 16px; border-radius: 40px; cursor: pointer; }
+        .filter-btn.active { background: #0f172a; color: white; }
+        table { width: 100%; border-collapse: collapse; overflow-x: auto; display: block; }
+        th, td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        .income-row { background: #ecfdf5; }
+        .expense-row { background: #fef2f2; }
+        .action-btn { padding: 4px 10px; border-radius: 40px; font-size: 0.7rem; margin: 0 3px; border: none; cursor: pointer; }
+        .edit-btn { background: #3b82f6; color: white; }
+        .delete-btn { background: #dc2626; color: white; }
+        .save-btn { background: #10b981; color: white; }
+        .cancel-btn { background: #6b7280; color: white; }
+        .export-btn { background: #6b7280; }
+        .import-btn { background: #f59e0b; }
+        .footer { text-align: center; margin-top: 30px; font-size: 0.75rem; color: #475569; }
+        @media (max-width: 600px) { body { padding: 12px; } th, td { font-size: 0.75rem; } }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <div class="logo-area">
+            <h1>💰 BDT Money Manager</h1>
+            <p>Free · Works on All Devices · Export/Import Sync</p>
+        </div>
+        <div>
+            <div class="sync-status" id="syncStatus">💾 Local Storage</div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button id="exportBtn" class="export-btn" style="padding: 4px 12px;">📤 Export</button>
+                <button id="importBtn" class="import-btn" style="padding: 4px 12px;">📥 Import</button>
+            </div>
+        </div>
+        <div class="balance-card">💰 Balance: <span id="totalBalance">0</span> ৳</div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-title income-title">📈 Add Income</div>
+            <div class="form-row">
+                <select id="incomeCategory"><option value="Office">🏢 Office</option><option value="Tuition">📚 Tuition</option></select>
+                <select id="incomeSubCat"></select>
+            </div>
+            <div class="form-row">
+                <input type="number" id="incomeAmount" placeholder="Amount (BDT)">
+                <select id="incomeLocation"><option>Bank</option><option>Cash</option></select>
+                <input type="date" id="incomeDate">
+            </div>
+            <button id="addIncomeBtn">➕ Add Income</button>
+            <div class="summary-stats">
+                <div class="stat-badge">💰 Total Income: <span id="totalIncomeSum">0</span> ৳</div>
+                <div class="stat-badge">🏦 Bank: <span id="bankTotal">0</span> ৳</div>
+                <div class="stat-badge">💵 Cash: <span id="cashTotal">0</span> ৳</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title expense-title">📉 Add Expense</div>
+            <div class="form-row">
+                <select id="expenseCategory">
+                    <option value="Treatment">🏥 Treatment</option><option value="Bike">🏍️ Bike</option>
+                    <option value="Food">🍔 Food</option><option value="Bills">⚡ Bills</option>
+                    <option value="Education">📖 Education</option>
+                    <option value="Investment">📈 Investment</option>
+                    <option value="Pocket Money">👝 Pocket Money</option>
+                    <option value="Other">📌 Other</option>
+                </select>
+                <select id="expenseSubCat"></select>
+            </div>
+            <div class="form-row">
+                <input type="number" id="expenseAmount" placeholder="Amount (BDT)">
+                <select id="expenseMethod"><option>Bank</option><option>Cash</option></select>
+                <input type="date" id="expenseDate">
+            </div>
+            <button id="addExpenseBtn">➖ Add Expense</button>
+            <div class="summary-stats"><div class="stat-badge">💸 Total Expense: <span id="totalExpenseSum">0</span> ৳</div></div>
+        </div>
+    </div>
+
+    <div class="savings-card">
+        <h4>💰 Savings = Total Income - Total Expense</h4>
+        <div class="savings-amount" id="savingsAmount">0 ৳</div>
+    </div>
+
+    <div class="report-chart-container">
+        <div class="report-section">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                <h3>📋 Transactions</h3>
+                <div class="report-filters">
+                    <button data-period="daily" class="filter-btn active">Daily</button>
+                    <button data-period="weekly" class="filter-btn">Weekly</button>
+                    <button data-period="monthly" class="filter-btn">Monthly</button>
+                </div>
+            </div>
+            <div style="overflow-x: auto; max-height: 350px;">
+                <table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Sub-Cat</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="transactionList"></tbody></table>
+            </div>
+            <div class="summary-stats" style="justify-content:center;">
+                <div class="stat-badge">Period Income: <span id="periodIncome">0</span> ৳</div>
+                <div class="stat-badge">Period Expense: <span id="periodExpense">0</span> ৳</div>
+                <div class="stat-badge">Period Savings: <span id="periodSavings">0</span> ৳</div>
+            </div>
+        </div>
+        <div class="chart-section">
+            <h3>🥧 Income vs Expense</h3>
+            <canvas id="pieChart"></canvas>
+            <div style="text-align:center; font-size:0.7rem; margin-top:10px;">🟢 Income &nbsp; 🔴 Expense</div>
+        </div>
+    </div>
+    <div class="footer">
+        ✅ Data saved locally on each device. Use <strong>Export</strong> to backup, <strong>Import</strong> to restore on other devices.
+    </div>
+</div>
+
+<script>
+    let transactions = [];
+    let currentPeriod = "daily";
+    let editModeId = null;
+    let chart = null;
+    
+    const incomeSubMap = { "Office": ["Salary", "Bonus", "Gift"], "Tuition": ["Coaching", "Student"] };
+    const expenseSubMap = {
+        "Treatment": ["Medicine", "Medical", "Equipment"], "Bike": ["Fuel", "Engine Oil", "Service"],
+        "Food": ["Home", "Restaurant", "Others"], "Bills": ["Internet", "Electricity", "Gas"],
+        "Education": ["Tuition", "Books"], "Investment": ["DPS", "FDR", "Insurance"],
+        "Pocket Money": ["Mother", "Father", "Wife", "Other"], "Other": ["Misc"]
+    };
+    
+    function updateIncomeSubCat() {
+        const main = document.getElementById("incomeCategory").value;
+        const sub = document.getElementById("incomeSubCat");
+        sub.innerHTML = "";
+        (incomeSubMap[main] || ["General"]).forEach(opt => { let o = document.createElement("option"); o.value = opt; o.textContent = opt; sub.appendChild(o); });
+    }
+    function updateExpenseSubCat() {
+        const main = document.getElementById("expenseCategory").value;
+        const sub = document.getElementById("expenseSubCat");
+        sub.innerHTML = "";
+        (expenseSubMap[main] || ["Other"]).forEach(opt => { let o = document.createElement("option"); o.value = opt; o.textContent = opt; sub.appendChild(o); });
+    }
+    
+    function loadFromLocal() {
+        const stored = localStorage.getItem("bdt_money_manager");
+        if(stored) transactions = JSON.parse(stored);
+        else {
+            const today = new Date().toISOString().slice(0,10);
+            transactions = [
+                { id: Date.now()+1, type: "income", category: "Office", subCategory: "Salary", amount: 55000, locationOrMethod: "Bank", date: today },
+                { id: Date.now()+2, type: "expense", category: "Food", subCategory: "Restaurant", amount: 1200, locationOrMethod: "Cash", date: today },
+            ];
+        }
+    }
+    
+    function saveToLocal() {
+        localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
+        updateStats();
+        document.getElementById("syncStatus").innerHTML = "💾 Saved to Local Storage";
+        setTimeout(() => { document.getElementById("syncStatus").innerHTML = "💾 Local Storage"; }, 1500);
+    }
+    
+    function exportData() {
+        const dataStr = JSON.stringify(transactions, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `bdt_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("syncStatus").innerHTML = "📤 Export complete!";
+        setTimeout(() => { document.getElementById("syncStatus").innerHTML = "💾 Local Storage"; }, 2000);
+    }
+    
+    function importData() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json";
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    transactions = imported;
+                    saveToLocal();
+                    renderAll();
+                    alert("✅ Import successful! Your data has been restored.");
+                } catch(err) { alert("Invalid backup file"); }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+    
+    function addIncome() {
+        let amount = parseFloat(document.getElementById("incomeAmount").value);
+        if(isNaN(amount) || amount<=0) { alert("Valid amount"); return; }
+        transactions.push({
+            id: Date.now(), type: "income", category: document.getElementById("incomeCategory").value,
+            subCategory: document.getElementById("incomeSubCat").value, amount: amount,
+            locationOrMethod: document.getElementById("incomeLocation").value,
+            date: document.getElementById("incomeDate").value || new Date().toISOString().slice(0,10)
+        });
+        saveToLocal(); renderAll(); document.getElementById("incomeAmount").value = "";
+    }
+    
+    function addExpense() {
+        let amount = parseFloat(document.getElementById("expenseAmount").value);
+        if(isNaN(amount) || amount<=0) { alert("Valid amount"); return; }
+        transactions.push({
+            id: Date.now(), type: "expense", category: document.getElementById("expenseCategory").value,
+            subCategory: document.getElementById("expenseSubCat").value, amount: amount,
+            locationOrMethod: document.getElementById("expenseMethod").value,
+            date: document.getElementById("expenseDate").value || new Date().toISOString().slice(0,10)
+        });
+        saveToLocal(); renderAll(); document.getElementById("expenseAmount").value = "";
+    }
+    
+    function deleteTransaction(id) { if(confirm("Delete this transaction?")) { transactions = transactions.filter(t=>t.id!==id); saveToLocal(); renderAll(); } }
+    function startEdit(id) { editModeId = id; renderAll(); }
+    function saveEdit(id) {
+        const newAmount = parseFloat(document.getElementById(`edit_amount_${id}`)?.value);
+        if(isNaN(newAmount) || newAmount<=0) { alert("Valid amount"); return; }
+        const txn = transactions.find(t=>t.id===id);
+        if(txn) {
+            txn.amount = newAmount;
+            txn.date = document.getElementById(`edit_date_${id}`)?.value || txn.date;
+            editModeId = null;
+            saveToLocal(); renderAll();
+        }
+    }
+    function cancelEdit() { editModeId = null; renderAll(); }
+    
+    function getFilteredByPeriod(period) {
+        const now = new Date();
+        let start,end;
+        if(period==="daily") { start=new Date(now.getFullYear(),now.getMonth(),now.getDate()); end=new Date(start.getTime()+86400000); }
+        else if(period==="weekly") { const day=now.getDay(), diff=now.getDate()-day+(day===0?-6:1); start=new Date(now.getFullYear(),now.getMonth(),diff); end=new Date(start.getTime()+7*86400000); }
+        else { start=new Date(now.getFullYear(),now.getMonth(),1); end=new Date(now.getFullYear(),now.getMonth()+1,1); }
+        return transactions.filter(t=>{ let d=new Date(t.date); return d>=start && d<end; });
+    }
+    
+    function updateChart(period) {
+        const filtered = getFilteredByPeriod(period);
+        let totalIncome = 0, totalExpense = 0;
+        filtered.forEach(t=>{ if(t.type==="income") totalIncome+=t.amount; else totalExpense+=t.amount; });
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, { type: 'pie', data: { labels: ['Income', 'Expense'], datasets: [{ data: [totalIncome, totalExpense], backgroundColor: ['#10b981', '#ef4444'] }] } });
+        document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
+        document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
+        document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+    }
+    
+    function renderTable(period) {
+        const filtered = getFilteredByPeriod(period);
+        filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
+        const tbody = document.getElementById("transactionList");
+        tbody.innerHTML = "";
+        filtered.forEach(t => {
+            const editing = editModeId === t.id;
+            const row = tbody.insertRow();
+            row.className = t.type==="income"?"income-row":"expense-row";
+            if(editing) {
+                row.insertCell(0).innerHTML = `<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:100px">`;
+                row.insertCell(1).innerHTML = t.type==="income"?"Income":"Expense";
+                row.insertCell(2).innerHTML = t.category;
+                row.insertCell(3).innerHTML = t.subCategory;
+                row.insertCell(4).innerHTML = `<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:90px">`;
+                row.insertCell(5).innerHTML = `<button class="action-btn save-btn" onclick="saveEdit(${t.id})">Save</button><button class="action-btn cancel-btn" onclick="cancelEdit()">Cancel</button>`;
+            } else {
+                row.insertCell(0).innerText = t.date;
+                row.insertCell(1).innerText = t.type==="income"?"📈 Income":"📉 Expense";
+                row.insertCell(2).innerText = t.category;
+                row.insertCell(3).innerText = t.subCategory;
+                row.insertCell(4).innerText = t.amount.toLocaleString()+" ৳";
+                row.insertCell(5).innerHTML = `<button class="action-btn edit-btn" onclick="startEdit(${t.id})">Edit</button><button class="action-btn delete-btn" onclick="deleteTransaction(${t.id})">Del</button>`;
+            }
+        });
+        updateChart(period);
+    }
+    
+    function updateStats() {
+        let totalInc=0, totalExp=0, bank=0, cash=0;
+        transactions.forEach(t=>{
+            if(t.type==="income") { totalInc+=t.amount; if(t.locationOrMethod==="Bank") bank+=t.amount; else cash+=t.amount; }
+            else { totalExp+=t.amount; if(t.locationOrMethod==="Bank") bank-=t.amount; else cash-=t.amount; }
+        });
+        document.getElementById("totalIncomeSum").innerText = totalInc.toLocaleString();
+        document.getElementById("totalExpenseSum").innerText = totalExp.toLocaleString();
+        document.getElementById("bankTotal").innerText = bank.toLocaleString();
+        document.getElementById("cashTotal").innerText = cash.toLocaleString();
+        document.getElementById("totalBalance").innerText = (totalInc-totalExp).toLocaleString();
+        document.getElementById("savingsAmount").innerHTML = (totalInc-totalExp).toLocaleString() + " ৳";
+    }
+    
+    function setActivePeriod(period) {
+        currentPeriod = period;
+        document.querySelectorAll(".filter-btn").forEach(btn=>{
+            if(btn.getAttribute("data-period")===period) btn.classList.add("active");
+            else btn.classList.remove("active");
+        });
+        renderTable(currentPeriod);
+    }
+    
+    function renderAll() { updateStats(); renderTable(currentPeriod); }
+    
+    document.addEventListener("DOMContentLoaded", () => {
+        loadFromLocal();
+        const today = new Date().toISOString().slice(0,10);
+        if(!document.getElementById("incomeDate").value) document.getElementById("incomeDate").value = today;
+        if(!document.getElementById("expenseDate").value) document.getElementById("expenseDate").value = today;
+        updateIncomeSubCat(); updateExpenseSubCat();
+        document.getElementById("incomeCategory").addEventListener("change", updateIncomeSubCat);
+        document.getElementById("expenseCategory").addEventListener("change", updateExpenseSubCat);
+        document.getElementById("addIncomeBtn").addEventListener("click", addIncome);
+        document.getElementById("addExpenseBtn").addEventListener("click", addExpense);
+        document.querySelectorAll(".filter-btn").forEach(btn=>btn.addEventListener("click",()=>setActivePeriod(btn.getAttribute("data-period"))));
+        document.getElementById("exportBtn").addEventListener("click", exportData);
+        document.getElementById("importBtn").addEventListener("click", importData);
+        renderAll();
+    });
+</script>
+</body>
+</html>
