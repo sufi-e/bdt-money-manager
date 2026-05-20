@@ -19,9 +19,9 @@
             color: #1c1c1e;
         }
 
-        /* main card container — iOS glass */
+        /* main app card (iOS-style) */
         .app-container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
             background: #ffffff;
             border-radius: 48px;
@@ -30,12 +30,11 @@
             transition: all 0.2s ease;
         }
 
-        /* inner padding changes based on device */
         .container-inner {
             padding: 24px 22px 32px;
         }
 
-        /* ----- header row (apple style) ----- */
+        /* header — flexible row */
         .header-row {
             display: flex;
             justify-content: space-between;
@@ -119,7 +118,7 @@
             font-weight: 700;
         }
 
-        /* 2-col layout: dynamic grid */
+        /* 2‑col forms: always side‑by‑side on desktop, stacked on mobile */
         .two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -127,35 +126,7 @@
             margin-bottom: 32px;
         }
 
-        /* on mobile -> single column, smooth */
-        @media (max-width: 700px) {
-            body {
-                padding: 12px;
-            }
-            .container-inner {
-                padding: 18px 16px 24px;
-            }
-            .two-col {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            .header-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .status-group {
-                align-items: flex-start;
-            }
-            .balance-pill {
-                align-self: center;
-                width: fit-content;
-            }
-            .chart-section canvas {
-                min-height: 260px;
-            }
-        }
-
-        /* iPhone-style cards */
+        /* cards styling */
         .card {
             background: #ffffff;
             border-radius: 32px;
@@ -182,7 +153,6 @@
             border-left-color: #ff3b30;
         }
 
-        /* forms — apple dropdown style */
         .form-stack {
             display: flex;
             flex-direction: column;
@@ -240,7 +210,6 @@
             cursor: not-allowed;
         }
 
-        /* summary chips */
         .stats-chips {
             display: flex;
             flex-wrap: wrap;
@@ -271,7 +240,7 @@
             letter-spacing: -0.5px;
         }
 
-        /* report + chart area */
+        /* ----- mobile/desktop layout for transactions + chart ----- */
         .report-chart-flex {
             display: flex;
             flex-wrap: wrap;
@@ -279,8 +248,10 @@
             margin-top: 8px;
         }
 
+        /* desktop: side by side */
         .report-panel {
             flex: 2;
+            min-width: 260px;
             background: #ffffff;
             border-radius: 36px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
@@ -289,10 +260,21 @@
 
         .chart-panel {
             flex: 1.5;
+            min-width: 260px;
             background: #ffffff;
             border-radius: 36px;
             padding: 20px 18px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
+        }
+
+        /* on mobile (< 800px) we make them stack vertically */
+        @media (max-width: 800px) {
+            .report-chart-flex {
+                flex-direction: column;
+            }
+            .chart-panel {
+                margin-top: 0;
+            }
         }
 
         .filter-bar {
@@ -329,7 +311,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        /* compact & beautiful table */
+        /* beautiful, compact table */
         .table-wrap {
             overflow-x: auto;
             padding: 0 16px 20px 16px;
@@ -415,9 +397,28 @@
             padding-top: 20px;
         }
 
-        @media (max-width: 550px) {
+        /* extra small adjustments */
+        @media (max-width: 700px) {
+            body {
+                padding: 12px;
+            }
             .container-inner {
-                padding: 16px 14px 24px;
+                padding: 18px 16px 24px;
+            }
+            .two-col {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .header-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .status-group {
+                align-items: flex-start;
+            }
+            .balance-pill {
+                align-self: center;
+                width: fit-content;
             }
             .segment-btn {
                 padding: 6px 12px;
@@ -435,11 +436,11 @@
 <body>
 <div class="app-container">
     <div class="container-inner">
-        <!-- Apple-style header -->
+        <!-- Apple header -->
         <div class="header-row">
             <div class="title-section">
                 <h1>💰 BDT Wallet</h1>
-                <p>Income · Expense · DPS · FDR · Savings</p>
+                <p>Income · DPS · FDR · Savings · Expenses</p>
             </div>
             <div class="status-group">
                 <div class="sync-badge" id="syncStatus">☁️ ready</div>
@@ -453,9 +454,9 @@
             <div class="balance-pill">💰 <span id="totalBalance">0</span> ৳</div>
         </div>
 
-        <!-- 2‑column dynamic forms -->
+        <!-- two column forms: always side by side on desktop, stacked on mobile -->
         <div class="two-col">
-            <!-- INCOME (new categories DPS, FDR, Saving, Other) -->
+            <!-- INCOME with new categories -->
             <div class="card">
                 <div class="card-title income-title">📈 Add Income</div>
                 <div class="form-stack">
@@ -531,7 +532,7 @@
             <div class="savings-number" id="savingsAmount">0 ৳</div>
         </div>
 
-        <!-- Transactions + Bar chart (larger chart on all devices) -->
+        <!-- Transactions + Chart: on mobile they will be stacked (flex-direction column) -->
         <div class="report-chart-flex">
             <div class="report-panel">
                 <div class="filter-bar">
@@ -564,12 +565,12 @@
                 <div style="text-align:center; font-size: 0.7rem; margin-top: 12px; color:#8e8e93;">🟢 Income &nbsp; 🔴 Expense</div>
             </div>
         </div>
-        <div class="footer-note">✨ Apple‑inspired UI · DPS · FDR · Saving categories · Auto cloud sync</div>
+        <div class="footer-note">✨ Apple interface · DPS · FDR · Saving categories · Auto cloud sync</div>
     </div>
 </div>
 
 <script>
-    // -------------------- GLOBALS --------------------
+    // -------------------- CONFIGURATION --------------------
     const GITHUB_USERNAME = "sufi-e";
     const GITHUB_REPO = "bdt-money-manager";
     let transactions = [];
@@ -577,7 +578,7 @@
     let editModeId = null;
     let barChart = null;
 
-    // INCOME subcategories (including new DPS, FDR, Saving)
+    // Income subcategories (including DPS, FDR, Saving, OtherIncome)
     const incomeSubMap = {
         "Office": ["Salary", "Bonus", "Gift"],
         "Tuition": ["Coaching", "Student"],
@@ -604,7 +605,7 @@
         "Other": ["Miscellaneous"]
     };
 
-    // ----- helpers & UI validation (no ⚠️, just graceful)
+    // helpers – dynamic subcategories
     function updateIncomeSubCat() {
         const main = document.getElementById("incomeCategory").value;
         const sub = document.getElementById("incomeSubCat");
@@ -615,6 +616,7 @@
             });
         }
     }
+
     function updateExpenseSubCat() {
         const main = document.getElementById("expenseCategory").value;
         const sub = document.getElementById("expenseSubCat");
@@ -626,6 +628,7 @@
         }
     }
 
+    // form validation (enables button only when all required fields are filled)
     function checkIncomeValid() {
         const cat = document.getElementById("incomeCategory").value;
         const sub = document.getElementById("incomeSubCat").value;
@@ -634,6 +637,7 @@
         const btn = document.getElementById("addIncomeBtn");
         btn.disabled = !(cat && sub && amt > 0 && date);
     }
+
     function checkExpenseValid() {
         const cat = document.getElementById("expenseCategory").value;
         const sub = document.getElementById("expenseSubCat").value;
@@ -643,7 +647,7 @@
         btn.disabled = !(cat && sub && amt > 0 && date);
     }
 
-    // last modified
+    // last modified UI
     function updateLastModifiedUI() {
         let lm = localStorage.getItem("bdt_last_modified");
         if (lm) {
@@ -652,7 +656,7 @@
         } else document.getElementById("lastModifiedDisplay").innerHTML = `last sync just now`;
     }
 
-    // ---------- GitHub sync (lightweight) ----------
+    // ---------- GitHub sync (light, optional) ----------
     async function getGitHubToken() {
         let token = localStorage.getItem("github_token");
         if (!token) {
@@ -661,6 +665,7 @@
         }
         return localStorage.getItem("github_token");
     }
+
     async function loadFromGitHub() {
         const token = await getGitHubToken();
         if (!token) return null;
@@ -676,6 +681,7 @@
         } catch(e) {}
         return null;
     }
+
     async function saveToGitHub(dataTx) {
         const token = localStorage.getItem("github_token");
         if (!token) return false;
@@ -695,6 +701,7 @@
         });
         return resp.ok;
     }
+
     async function syncWithCloud() {
         const statusDiv = document.getElementById("syncStatus");
         statusDiv.innerHTML = "⟳ syncing...";
@@ -721,7 +728,7 @@
         setTimeout(() => statusDiv.innerHTML = localStorage.getItem("github_token") ? "☁️ auto‑sync" : "💾 local", 2000);
     }
 
-    // local data
+    // local storage management
     function loadFromLocal() {
         const stored = localStorage.getItem("bdt_money_manager");
         if (stored) transactions = JSON.parse(stored);
@@ -736,6 +743,7 @@
         }
         updateLastModifiedUI();
     }
+
     async function persistLocal() {
         localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
         localStorage.setItem("bdt_last_modified", new Date().toISOString());
@@ -744,7 +752,7 @@
         if (localStorage.getItem("github_token")) await saveToGitHub(transactions);
     }
 
-    // CRUD operations
+    // CRUD
     function addIncome() {
         let amount = parseFloat(document.getElementById("incomeAmount").value);
         if (isNaN(amount) || amount <= 0) return;
@@ -758,6 +766,7 @@
         document.getElementById("incomeAmount").value = "";
         document.getElementById("incomeCategory").value = ""; updateIncomeSubCat(); checkIncomeValid();
     }
+
     function addExpense() {
         let amount = parseFloat(document.getElementById("expenseAmount").value);
         if (isNaN(amount) || amount <= 0) return;
@@ -771,6 +780,7 @@
         document.getElementById("expenseAmount").value = "";
         document.getElementById("expenseCategory").value = ""; updateExpenseSubCat(); checkExpenseValid();
     }
+
     function deleteTransaction(id) { if(confirm("Remove transaction?")) { transactions = transactions.filter(t=>t.id!==id); persistLocal(); renderAll(); } }
     function startEdit(id) { editModeId = id; renderAll(); }
     function saveEdit(id) {
@@ -786,7 +796,7 @@
     }
     function cancelEdit() { editModeId = null; renderAll(); }
 
-    // Period & chart
+    // period & chart
     function getStartOfWeek(date) { let d=new Date(date); let day=d.getDay(); let diff=(day>=5)?(day-5):(day+2); d.setDate(d.getDate()-diff); d.setHours(0,0,0,0); return d; }
     function getFilteredByPeriod(period) {
         let now=new Date(), start,end;
@@ -797,7 +807,20 @@
         return transactions.filter(t=>{ let d=new Date(t.date); return d>=start && d<end; });
     }
 
-    function updateBarChart(period) {
+    function drawBar(incData, expData, labels) {
+        const ctx = document.getElementById('barChart').getContext('2d');
+        if(barChart) barChart.destroy();
+        barChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [
+                { label: 'Income', data: incData, backgroundColor: '#34c759', borderRadius: 12, barPercentage: 0.7 },
+                { label: 'Expense', data: expData, backgroundColor: '#ff3b30', borderRadius: 12, barPercentage: 0.7 }
+            ] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString()+' ৳' } } } }
+        });
+    }
+
+    function updateChartAndPeriodStats(period) {
         const filtered = getFilteredByPeriod(period);
         if(period==="daily") {
             let inc=0, exp=0; filtered.forEach(t=> t.type==="income"? inc+=t.amount: exp+=t.amount);
@@ -822,7 +845,7 @@
             let incArr=Array(daysInMonth).fill(0), expArr=Array(daysInMonth).fill(0);
             filtered.forEach(t=>{
                 let day=new Date(t.date).getDate()-1;
-                if(day>=0) t.type==="income"? incArr[day]+=t.amount: expArr[day]+=t.amount;
+                if(day>=0 && day<daysInMonth) t.type==="income"? incArr[day]+=t.amount: expArr[day]+=t.amount;
             });
             let labels = daysInMonth>25 ? Array.from({length:daysInMonth},(_,i)=> i%3===0? (i+1).toString() : "") : Array.from({length:daysInMonth},(_,i)=>(i+1).toString());
             drawBar(incArr, expArr, labels);
@@ -830,7 +853,7 @@
             document.getElementById("periodIncome").innerText = totalInc.toLocaleString();
             document.getElementById("periodExpense").innerText = totalExp.toLocaleString();
             document.getElementById("periodSavings").innerText = (totalInc-totalExp).toLocaleString();
-        } else { // yearly
+        } else {
             let monthlyInc=Array(12).fill(0), monthlyExp=Array(12).fill(0);
             filtered.forEach(t=>{ let m=new Date(t.date).getMonth(); t.type==="income"? monthlyInc[m]+=t.amount: monthlyExp[m]+=t.amount; });
             drawBar(monthlyInc, monthlyExp, ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]);
@@ -839,18 +862,6 @@
             document.getElementById("periodExpense").innerText = totalExp.toLocaleString();
             document.getElementById("periodSavings").innerText = (totalInc-totalExp).toLocaleString();
         }
-    }
-    function drawBar(incData, expData, labels) {
-        const ctx = document.getElementById('barChart').getContext('2d');
-        if(barChart) barChart.destroy();
-        barChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: labels, datasets: [
-                { label: 'Income', data: incData, backgroundColor: '#34c759', borderRadius: 12, barPercentage: 0.7 },
-                { label: 'Expense', data: expData, backgroundColor: '#ff3b30', borderRadius: 12, barPercentage: 0.7 }
-            ] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString()+' ৳' } } } }
-        });
     }
 
     function renderTransactionTable(period) {
@@ -878,7 +889,7 @@
                 row.insertCell(5).innerHTML = `<button class="mini-btn edit-mini" onclick="startEdit(${t.id})">Edit</button><button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`;
             }
         });
-        updateBarChart(period);
+        updateChartAndPeriodStats(period);
     }
 
     function updateStatsUI() {
@@ -903,9 +914,10 @@
         });
         renderTransactionTable(currentPeriod);
     }
+
     function renderAll() { updateStatsUI(); renderTransactionTable(currentPeriod); }
 
-    // event binding
+    // ----- initialize everything -----
     document.addEventListener("DOMContentLoaded", async () => {
         loadFromLocal();
         let today = new Date().toISOString().slice(0,10);
