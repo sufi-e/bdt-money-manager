@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BDT Money Manager - Full Categories + Auto Sync</title>
+    <title>BDT Money Manager - Smart Forms + Last Modified</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -13,7 +13,6 @@
             font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', sans-serif;
         }
 
-        /* Dynamic CSS based on device */
         :root {
             --primary-dark: #1e293b;
             --success: #10b981;
@@ -21,8 +20,6 @@
             --warning: #f59e0b;
             --info: #3b82f6;
             --bg-light: #f0f4f8;
-            --card-radius: 28px;
-            --spacing: 20px;
         }
 
         body {
@@ -31,13 +28,11 @@
             color: #1e293b;
         }
 
-        /* Mobile-first responsive */
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Header - responsive */
         .header {
             display: flex;
             justify-content: space-between;
@@ -74,6 +69,14 @@
             gap: 6px;
         }
 
+        .last-modified {
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            color: #475569;
+        }
+
         .balance-card {
             background: var(--primary-dark);
             padding: 8px 16px;
@@ -88,7 +91,6 @@
             font-weight: bold;
         }
 
-        /* Grid - responsive */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -104,7 +106,6 @@
             .balance-card span { font-size: 1.5rem; }
         }
 
-        /* Cards */
         .card {
             background: white;
             border-radius: 24px;
@@ -134,7 +135,6 @@
         .income-title { border-left-color: var(--success); }
         .expense-title { border-left-color: var(--danger); }
 
-        /* Forms - mobile optimized */
         .form-row {
             display: flex;
             flex-direction: column;
@@ -159,7 +159,19 @@
             select, input, button { flex: 1; min-width: 120px; }
         }
 
-        button {
+        /* Required field styling */
+        .required-field {
+            border-left: 3px solid var(--danger);
+        }
+
+        .field-hint {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            margin-top: 4px;
+            padding-left: 12px;
+        }
+
+        .add-btn {
             background: var(--primary-dark);
             color: white;
             border: none;
@@ -168,9 +180,23 @@
             transition: 0.2s;
         }
 
-        button:hover { background: #334155; transform: scale(0.98); }
+        .add-btn:hover { background: #334155; transform: scale(0.98); }
 
-        /* Summary stats */
+        .add-btn.disabled, .add-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        .validation-message {
+            font-size: 0.7rem;
+            color: var(--danger);
+            margin-top: 8px;
+            text-align: center;
+            display: none;
+        }
+
         .summary-stats {
             display: flex;
             flex-wrap: wrap;
@@ -190,7 +216,6 @@
             .stat-badge { padding: 8px 14px; font-size: 0.9rem; }
         }
 
-        /* Savings card */
         .savings-card {
             background: linear-gradient(135deg, var(--success), #059669);
             color: white;
@@ -207,7 +232,6 @@
             .savings-card .savings-amount { font-size: 2rem; }
         }
 
-        /* Report + Chart */
         .report-chart-container {
             display: flex;
             flex-direction: column;
@@ -233,11 +257,7 @@
             .report-section, .chart-section { border-radius: 28px; padding: 20px; }
         }
 
-        canvas { max-height: 250px; width: 100% !important; }
-
-        @media (min-width: 768px) {
-            canvas { max-height: 280px; }
-        }
+        canvas { max-height: 350px; width: 100% !important; }
 
         .report-filters {
             display: flex;
@@ -261,7 +281,6 @@
 
         .filter-btn.active { background: var(--primary-dark); color: white; }
 
-        /* Table - horizontal scroll on mobile */
         .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -334,10 +353,11 @@
     <div class="header">
         <div class="logo-area">
             <h1>💰 BDT Money Manager</h1>
-            <p>Full Categories · Auto Sync · All Devices</p>
+            <p>Smart Forms · Last Modified · Auto Sync</p>
         </div>
         <div>
             <div class="sync-status" id="syncStatus">🔄 Checking...</div>
+            <div class="last-modified" id="lastModifiedDisplay">📅 Last modified: Loading...</div>
             <div class="manual-buttons">
                 <button id="forceSyncBtn" class="small-btn">🔄 Sync</button>
                 <button id="exportBtn" class="small-btn">📤 Export</button>
@@ -348,25 +368,30 @@
     </div>
 
     <div class="dashboard-grid">
-        <!-- INCOME -->
+        <!-- INCOME SECTION -->
         <div class="card">
             <div class="card-title income-title">📈 Add Income</div>
             <div class="form-row">
-                <select id="incomeCategory">
+                <select id="incomeCategory" class="required-field">
+                    <option value="">▼ Select Category</option>
                     <option value="Office">🏢 Office</option>
                     <option value="Tuition">📚 Tuition</option>
                 </select>
-                <select id="incomeSubCat"></select>
+                <select id="incomeSubCat" class="required-field">
+                    <option value="">▼ Select Sub-Category</option>
+                </select>
             </div>
             <div class="form-row">
-                <input type="number" id="incomeAmount" placeholder="Amount (BDT)">
+                <input type="number" id="incomeAmount" placeholder="Amount (BDT) *" class="required-field">
                 <select id="incomeLocation">
                     <option value="Bank">🏦 Bank</option>
                     <option value="Cash">💵 Cash</option>
                 </select>
-                <input type="date" id="incomeDate">
+                <input type="date" id="incomeDate" class="required-field">
             </div>
-            <button id="addIncomeBtn">➕ Add Income</button>
+            <div class="field-hint">⚠️ Category, Sub-Category, Amount, and Date are required</div>
+            <button id="addIncomeBtn" class="add-btn" disabled>➕ Add Income</button>
+            <div id="incomeValidationMsg" class="validation-message"></div>
             <div class="summary-stats">
                 <div class="stat-badge">💰 Total: <span id="totalIncomeSum">0</span> ৳</div>
                 <div class="stat-badge">🏦 Bank: <span id="bankTotal">0</span> ৳</div>
@@ -374,11 +399,12 @@
             </div>
         </div>
 
-        <!-- EXPENSE - ALL CATEGORIES -->
+        <!-- EXPENSE SECTION -->
         <div class="card">
             <div class="card-title expense-title">📉 Add Expense</div>
             <div class="form-row">
-                <select id="expenseCategory">
+                <select id="expenseCategory" class="required-field">
+                    <option value="">▼ Select Category</option>
                     <option value="Treatment">🏥 Treatment</option>
                     <option value="Bike">🏍️ Bike</option>
                     <option value="Transport">🚌 Transport</option>
@@ -394,17 +420,21 @@
                     <option value="Gadget">📱 Gadget</option>
                     <option value="Other">📌 Other</option>
                 </select>
-                <select id="expenseSubCat"></select>
+                <select id="expenseSubCat" class="required-field">
+                    <option value="">▼ Select Sub-Category</option>
+                </select>
             </div>
             <div class="form-row">
-                <input type="number" id="expenseAmount" placeholder="Amount (BDT)">
+                <input type="number" id="expenseAmount" placeholder="Amount (BDT) *" class="required-field">
                 <select id="expenseMethod">
                     <option value="Bank">🏦 Bank</option>
                     <option value="Cash">💵 Cash</option>
                 </select>
-                <input type="date" id="expenseDate">
+                <input type="date" id="expenseDate" class="required-field">
             </div>
-            <button id="addExpenseBtn">➖ Add Expense</button>
+            <div class="field-hint">⚠️ Category, Sub-Category, Amount, and Date are required</div>
+            <button id="addExpenseBtn" class="add-btn" disabled>➖ Add Expense</button>
+            <div id="expenseValidationMsg" class="validation-message"></div>
             <div class="summary-stats">
                 <div class="stat-badge">💸 Total Expense: <span id="totalExpenseSum">0</span> ৳</div>
             </div>
@@ -421,9 +451,10 @@
             <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                 <h3>📋 Transactions</h3>
                 <div class="report-filters">
-                    <button data-period="daily" class="filter-btn active">Daily</button>
+                    <button data-period="daily" class="filter-btn">Daily</button>
                     <button data-period="weekly" class="filter-btn">Weekly</button>
                     <button data-period="monthly" class="filter-btn">Monthly</button>
+                    <button data-period="yearly" class="filter-btn active">Yearly</button>
                 </div>
             </div>
             <div class="table-wrapper">
@@ -441,13 +472,13 @@
             </div>
         </div>
         <div class="chart-section">
-            <h3>🥧 Income vs Expense</h3>
-            <canvas id="pieChart"></canvas>
+            <h3>📊 Income vs Expense</h3>
+            <canvas id="barChart"></canvas>
             <div style="text-align:center; font-size:0.7rem; margin-top:10px;">🟢 Income &nbsp; 🔴 Expense</div>
         </div>
     </div>
     <div class="footer">
-        ✅ Auto-sync across all devices using GitHub. All expense categories included.
+        ✅ All required fields must be filled before adding | Auto-sync across all devices
     </div>
 </div>
 
@@ -457,11 +488,11 @@
     const GITHUB_REPO = "bdt-money-manager";
     
     let transactions = [];
-    let currentPeriod = "daily";
+    let currentPeriod = "yearly";
     let editModeId = null;
-    let chart = null;
+    let barChart = null;
     
-    // ALL EXPENSE CATEGORIES with their sub-categories (complete list)
+    // Category mappings
     const incomeSubMap = { 
         "Office": ["Salary", "Bonus", "Gift"], 
         "Tuition": ["Coaching", "Student"] 
@@ -484,28 +515,103 @@
         "Other": ["Miscellaneous"]
     };
     
+    // Update subcategory dropdowns
     function updateIncomeSubCat() {
         const main = document.getElementById("incomeCategory").value;
         const sub = document.getElementById("incomeSubCat");
-        sub.innerHTML = "";
-        (incomeSubMap[main] || ["General"]).forEach(opt => {
-            let o = document.createElement("option");
-            o.value = opt;
-            o.textContent = opt;
-            sub.appendChild(o);
-        });
+        sub.innerHTML = '<option value="">▼ Select Sub-Category</option>';
+        if (main && incomeSubMap[main]) {
+            incomeSubMap[main].forEach(opt => {
+                let o = document.createElement("option");
+                o.value = opt;
+                o.textContent = opt;
+                sub.appendChild(o);
+            });
+        }
+        validateIncomeForm();
     }
     
     function updateExpenseSubCat() {
         const main = document.getElementById("expenseCategory").value;
         const sub = document.getElementById("expenseSubCat");
-        sub.innerHTML = "";
-        (expenseSubMap[main] || ["Other"]).forEach(opt => {
-            let o = document.createElement("option");
-            o.value = opt;
-            o.textContent = opt;
-            sub.appendChild(o);
-        });
+        sub.innerHTML = '<option value="">▼ Select Sub-Category</option>';
+        if (main && expenseSubMap[main]) {
+            expenseSubMap[main].forEach(opt => {
+                let o = document.createElement("option");
+                o.value = opt;
+                o.textContent = opt;
+                sub.appendChild(o);
+            });
+        }
+        validateExpenseForm();
+    }
+    
+    // Validation functions
+    function validateIncomeForm() {
+        const category = document.getElementById("incomeCategory").value;
+        const subCategory = document.getElementById("incomeSubCat").value;
+        const amount = document.getElementById("incomeAmount").value;
+        const date = document.getElementById("incomeDate").value;
+        const addBtn = document.getElementById("addIncomeBtn");
+        const validationMsg = document.getElementById("incomeValidationMsg");
+        
+        const isValid = category && subCategory && amount && parseFloat(amount) > 0 && date;
+        
+        if (isValid) {
+            addBtn.disabled = false;
+            validationMsg.style.display = "none";
+        } else {
+            addBtn.disabled = true;
+            if (!category || !subCategory) {
+                validationMsg.innerHTML = "";
+            } else if (!amount || parseFloat(amount) <= 0) {
+                validationMsg.innerHTML = "";
+            } else if (!date) {
+                validationMsg.innerHTML = "";
+            } else {
+                validationMsg.innerHTML = "";
+            }
+            validationMsg.style.display = "block";
+        }
+    }
+    
+    function validateExpenseForm() {
+        const category = document.getElementById("expenseCategory").value;
+        const subCategory = document.getElementById("expenseSubCat").value;
+        const amount = document.getElementById("expenseAmount").value;
+        const date = document.getElementById("expenseDate").value;
+        const addBtn = document.getElementById("addExpenseBtn");
+        const validationMsg = document.getElementById("expenseValidationMsg");
+        
+        const isValid = category && subCategory && amount && parseFloat(amount) > 0 && date;
+        
+        if (isValid) {
+            addBtn.disabled = false;
+            validationMsg.style.display = "none";
+        } else {
+            addBtn.disabled = true;
+            if (!category || !subCategory) {
+                validationMsg.innerHTML = "⚠️ Please select both Category and Sub-Category";
+            } else if (!amount || parseFloat(amount) <= 0) {
+                validationMsg.innerHTML = "⚠️ Please enter a valid amount (greater than 0)";
+            } else if (!date) {
+                validationMsg.innerHTML = "⚠️ Please select a date";
+            } else {
+                validationMsg.innerHTML = "⚠️ Please fill all required fields";
+            }
+            validationMsg.style.display = "block";
+        }
+    }
+    
+    // Update last modified display
+    function updateLastModifiedDisplay() {
+        const lastModified = localStorage.getItem("bdt_last_modified");
+        if (lastModified) {
+            const date = new Date(lastModified);
+            document.getElementById("lastModifiedDisplay").innerHTML = `📅 Last modified: ${date.toLocaleString()}`;
+        } else {
+            document.getElementById("lastModifiedDisplay").innerHTML = `📅 Last modified: Just now`;
+        }
     }
     
     // GitHub sync functions
@@ -609,6 +715,8 @@
             }
         }
         
+        updateLastModifiedDisplay();
+        
         setTimeout(() => {
             if (localStorage.getItem("github_token")) {
                 syncStatus.innerHTML = "☁️ Auto-sync ON";
@@ -631,7 +739,6 @@
         }
     }
     
-    // Local storage
     function loadFromLocal() {
         const stored = localStorage.getItem("bdt_money_manager");
         if (stored) {
@@ -645,11 +752,13 @@
             ];
             localStorage.setItem("bdt_last_modified", new Date().toISOString());
         }
+        updateLastModifiedDisplay();
     }
     
     async function saveToLocal() {
         localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
         localStorage.setItem("bdt_last_modified", new Date().toISOString());
+        updateLastModifiedDisplay();
         updateStats();
         
         const token = localStorage.getItem("github_token");
@@ -709,6 +818,9 @@
         });
         saveToLocal(); renderAll();
         document.getElementById("incomeAmount").value = "";
+        document.getElementById("incomeCategory").value = "";
+        document.getElementById("incomeSubCat").innerHTML = '<option value="">▼ Select Sub-Category</option>';
+        validateIncomeForm();
     }
     
     function addExpense() {
@@ -724,6 +836,9 @@
         });
         saveToLocal(); renderAll();
         document.getElementById("expenseAmount").value = "";
+        document.getElementById("expenseCategory").value = "";
+        document.getElementById("expenseSubCat").innerHTML = '<option value="">▼ Select Sub-Category</option>';
+        validateExpenseForm();
     }
     
     function deleteTransaction(id) {
@@ -749,47 +864,204 @@
     
     function cancelEdit() { editModeId = null; renderAll(); }
     
+    // Period filtering
+    function getStartOfWeek(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = (day >= 5) ? (day - 5) : (day + 2);
+        d.setDate(d.getDate() - diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+    
     function getFilteredByPeriod(period) {
         const now = new Date();
         let start, end;
+        
         if (period === "daily") {
             start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             end = new Date(start.getTime() + 86400000);
         } else if (period === "weekly") {
-            const day = now.getDay();
-            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-            start = new Date(now.getFullYear(), now.getMonth(), diff);
-            end = new Date(start.getTime() + 7 * 86400000);
-        } else {
+            start = getStartOfWeek(now);
+            end = new Date(start);
+            end.setDate(start.getDate() + 7);
+        } else if (period === "monthly") {
             start = new Date(now.getFullYear(), now.getMonth(), 1);
             end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        } else {
+            start = new Date(now.getFullYear(), 0, 1);
+            end = new Date(now.getFullYear() + 1, 0, 1);
         }
+        
         return transactions.filter(t => {
             let d = new Date(t.date);
             return d >= start && d < end;
         });
     }
     
-    function updateChart(period) {
+    function updateBarChart(period) {
         const filtered = getFilteredByPeriod(period);
-        let totalIncome = 0, totalExpense = 0;
-        filtered.forEach(t => {
-            if (t.type === "income") totalIncome += t.amount;
-            else totalExpense += t.amount;
-        });
-        const ctx = document.getElementById('pieChart').getContext('2d');
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Income', 'Expense'],
-                datasets: [{ data: [totalIncome, totalExpense], backgroundColor: ['#10b981', '#ef4444'] }]
-            },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
-        });
-        document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
-        document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
-        document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+        
+        if (period === "daily") {
+            let totalIncome = 0, totalExpense = 0;
+            filtered.forEach(t => {
+                if (t.type === "income") totalIncome += t.amount;
+                else totalExpense += t.amount;
+            });
+            
+            const ctx = document.getElementById('barChart').getContext('2d');
+            if (barChart) barChart.destroy();
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Today'],
+                    datasets: [
+                        { label: 'Income', data: [totalIncome], backgroundColor: '#10b981', borderRadius: 8 },
+                        { label: 'Expense', data: [totalExpense], backgroundColor: '#ef4444', borderRadius: 8 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
+                }
+            });
+            
+            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+            
+        } else if (period === "weekly") {
+            const now = new Date();
+            const weekStart = getStartOfWeek(now);
+            const days = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+            const dailyIncome = new Array(7).fill(0);
+            const dailyExpense = new Array(7).fill(0);
+            
+            filtered.forEach(t => {
+                const tDate = new Date(t.date);
+                const dayDiff = Math.floor((tDate - weekStart) / (1000 * 60 * 60 * 24));
+                if (dayDiff >= 0 && dayDiff < 7) {
+                    if (t.type === "income") dailyIncome[dayDiff] += t.amount;
+                    else dailyExpense[dayDiff] += t.amount;
+                }
+            });
+            
+            const ctx = document.getElementById('barChart').getContext('2d');
+            if (barChart) barChart.destroy();
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [
+                        { label: 'Income', data: dailyIncome, backgroundColor: '#10b981', borderRadius: 8 },
+                        { label: 'Expense', data: dailyExpense, backgroundColor: '#ef4444', borderRadius: 8 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
+                }
+            });
+            
+            const totalIncome = dailyIncome.reduce((a,b) => a + b, 0);
+            const totalExpense = dailyExpense.reduce((a,b) => a + b, 0);
+            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+            
+        } else if (period === "monthly") {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const dailyIncome = new Array(daysInMonth).fill(0);
+            const dailyExpense = new Array(daysInMonth).fill(0);
+            
+            filtered.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate.getFullYear() === year && tDate.getMonth() === month) {
+                    const dayIndex = tDate.getDate() - 1;
+                    if (t.type === "income") dailyIncome[dayIndex] += t.amount;
+                    else dailyExpense[dayIndex] += t.amount;
+                }
+            });
+            
+            const labels = [];
+            for (let i = 0; i < daysInMonth; i++) {
+                if (i % 3 === 0 || i === daysInMonth - 1) labels.push(`${i+1}`);
+                else labels.push('');
+            }
+            
+            const ctx = document.getElementById('barChart').getContext('2d');
+            if (barChart) barChart.destroy();
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Income', data: dailyIncome, backgroundColor: '#10b981', borderRadius: 8, barPercentage: 0.7 },
+                        { label: 'Expense', data: dailyExpense, backgroundColor: '#ef4444', borderRadius: 8, barPercentage: 0.7 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
+                }
+            });
+            
+            const totalIncome = dailyIncome.reduce((a,b) => a + b, 0);
+            const totalExpense = dailyExpense.reduce((a,b) => a + b, 0);
+            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+            
+        } else if (period === "yearly") {
+            const monthlyIncome = new Array(12).fill(0);
+            const monthlyExpense = new Array(12).fill(0);
+            
+            filtered.forEach(t => {
+                const month = new Date(t.date).getMonth();
+                if (t.type === "income") monthlyIncome[month] += t.amount;
+                else monthlyExpense[month] += t.amount;
+            });
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            const ctx = document.getElementById('barChart').getContext('2d');
+            if (barChart) barChart.destroy();
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'Income', data: monthlyIncome, backgroundColor: '#10b981', borderRadius: 8, barPercentage: 0.7 },
+                        { label: 'Expense', data: monthlyExpense, backgroundColor: '#ef4444', borderRadius: 8, barPercentage: 0.7 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
+                }
+            });
+            
+            const totalIncome = monthlyIncome.reduce((a,b) => a + b, 0);
+            const totalExpense = monthlyExpense.reduce((a,b) => a + b, 0);
+            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+        }
     }
     
     function renderTable(period) {
@@ -819,7 +1091,7 @@
                 row.insertCell(5).innerHTML = `<button class="action-btn edit-btn" onclick="startEdit(${t.id})">Edit</button><button class="action-btn delete-btn" onclick="deleteTransaction(${t.id})">Del</button>`;
             }
         });
-        updateChart(period);
+        updateBarChart(period);
     }
     
     function updateStats() {
@@ -866,6 +1138,18 @@
         
         document.getElementById("incomeCategory").addEventListener("change", updateIncomeSubCat);
         document.getElementById("expenseCategory").addEventListener("change", updateExpenseSubCat);
+        
+        // Add validation listeners
+        document.getElementById("incomeCategory").addEventListener("change", validateIncomeForm);
+        document.getElementById("incomeSubCat").addEventListener("change", validateIncomeForm);
+        document.getElementById("incomeAmount").addEventListener("input", validateIncomeForm);
+        document.getElementById("incomeDate").addEventListener("change", validateIncomeForm);
+        
+        document.getElementById("expenseCategory").addEventListener("change", validateExpenseForm);
+        document.getElementById("expenseSubCat").addEventListener("change", validateExpenseForm);
+        document.getElementById("expenseAmount").addEventListener("input", validateExpenseForm);
+        document.getElementById("expenseDate").addEventListener("change", validateExpenseForm);
+        
         document.getElementById("addIncomeBtn").addEventListener("click", addIncome);
         document.getElementById("addExpenseBtn").addEventListener("click", addExpense);
         document.querySelectorAll(".filter-btn").forEach(btn => btn.addEventListener("click", () => setActivePeriod(btn.getAttribute("data-period"))));
