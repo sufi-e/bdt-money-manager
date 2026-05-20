@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BDT Money Manager - Free Cloud Sync</title>
+    <title>BDT Money Manager - GitHub Auto Sync</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
@@ -11,7 +11,10 @@
         .app-container { max-width: 1400px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; background: white; padding: 16px 24px; border-radius: 32px; margin-bottom: 25px; }
         .logo-area h1 { background: linear-gradient(135deg, #0f2b3d, #1e7e34); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .sync-status { background: #e2e8f0; padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; }
+        .sync-status { background: #e2e8f0; padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
+        .sync-status.synced { background: #10b981; color: white; }
+        .sync-status.syncing { background: #f59e0b; color: white; }
+        .sync-status.error { background: #ef4444; color: white; }
         .balance-card { background: #1e293b; padding: 10px 20px; border-radius: 40px; color: white; }
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
         @media (max-width: 800px) { .dashboard-grid { grid-template-columns: 1fr; } }
@@ -43,24 +46,25 @@
         .delete-btn { background: #dc2626; color: white; }
         .save-btn { background: #10b981; color: white; }
         .cancel-btn { background: #6b7280; color: white; }
-        .export-btn { background: #6b7280; }
-        .import-btn { background: #f59e0b; }
         .footer { text-align: center; margin-top: 30px; font-size: 0.75rem; color: #475569; }
-        @media (max-width: 600px) { body { padding: 12px; } th, td { font-size: 0.75rem; } }
+        @media (max-width: 600px) { body { padding: 12px; } }
+        .manual-buttons { display: flex; gap: 8px; margin-top: 5px; }
+        .small-btn { padding: 4px 10px; font-size: 0.7rem; background: #6b7280; }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="header">
         <div class="logo-area">
-            <h1>💰 BDT Money Manager</h1>
-            <p>Free · Works on All Devices · Export/Import Sync</p>
+            <h1>☁️ BDT Money Manager</h1>
+            <p>GitHub Auto-Sync · Works on All Devices</p>
         </div>
         <div>
-            <div class="sync-status" id="syncStatus">💾 Local Storage</div>
-            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                <button id="exportBtn" class="export-btn" style="padding: 4px 12px;">📤 Export</button>
-                <button id="importBtn" class="import-btn" style="padding: 4px 12px;">📥 Import</button>
+            <div class="sync-status" id="syncStatus">🔄 Checking sync...</div>
+            <div class="manual-buttons">
+                <button id="forceSyncBtn" class="small-btn">🔄 Force Sync</button>
+                <button id="exportBtn" class="small-btn">📤 Export Backup</button>
+                <button id="importBtn" class="small-btn">📥 Import Backup</button>
             </div>
         </div>
         <div class="balance-card">💰 Balance: <span id="totalBalance">0</span> ৳</div>
@@ -93,8 +97,6 @@
                     <option value="Treatment">🏥 Treatment</option><option value="Bike">🏍️ Bike</option>
                     <option value="Food">🍔 Food</option><option value="Bills">⚡ Bills</option>
                     <option value="Education">📖 Education</option>
-                    <option value="Investment">📈 Investment</option>
-                    <option value="Pocket Money">👝 Pocket Money</option>
                     <option value="Other">📌 Other</option>
                 </select>
                 <select id="expenseSubCat"></select>
@@ -136,27 +138,175 @@
         <div class="chart-section">
             <h3>🥧 Income vs Expense</h3>
             <canvas id="pieChart"></canvas>
-            <div style="text-align:center; font-size:0.7rem; margin-top:10px;">🟢 Income &nbsp; 🔴 Expense</div>
         </div>
     </div>
     <div class="footer">
-        ✅ Data saved locally on each device. Use <strong>Export</strong> to backup, <strong>Import</strong> to restore on other devices.
+        ✅ Auto-syncs across all devices using GitHub. Each change saves to cloud and local storage.
     </div>
 </div>
 
 <script>
+    // GitHub Configuration
+    const GITHUB_USERNAME = "sufi-e";
+    const GITHUB_REPO = "bdt-money-manager";
+    const GITHUB_TOKEN = "";  // Leave empty - will use Personal Access Token from localStorage
+    
     let transactions = [];
     let currentPeriod = "daily";
     let editModeId = null;
     let chart = null;
+    let lastSyncTime = null;
+    let localLastModified = null;
     
     const incomeSubMap = { "Office": ["Salary", "Bonus", "Gift"], "Tuition": ["Coaching", "Student"] };
     const expenseSubMap = {
         "Treatment": ["Medicine", "Medical", "Equipment"], "Bike": ["Fuel", "Engine Oil", "Service"],
         "Food": ["Home", "Restaurant", "Others"], "Bills": ["Internet", "Electricity", "Gas"],
-        "Education": ["Tuition", "Books"], "Investment": ["DPS", "FDR", "Insurance"],
-        "Pocket Money": ["Mother", "Father", "Wife", "Other"], "Other": ["Misc"]
+        "Education": ["Tuition", "Books"], "Other": ["Misc"]
     };
+    
+    // Initialize with token prompt if needed
+    async function getGitHubToken() {
+        let token = localStorage.getItem("github_token");
+        if (!token) {
+            token = prompt("🔐 For auto-sync across devices, enter your GitHub Personal Access Token:\n\n1. Go to: https://github.com/settings/tokens\n2. Click 'Generate new token (classic)'\n3. Select 'repo' scope\n4. Copy the token and paste here\n\n(You can also skip - manual Export/Import still works)");
+            if (token) {
+                localStorage.setItem("github_token", token);
+            }
+        }
+        return token;
+    }
+    
+    async function loadFromGitHub() {
+        const token = await getGitHubToken();
+        if (!token) return null;
+        
+        try {
+            const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+            });
+            
+            if (response.status === 200) {
+                const data = await response.json();
+                const content = JSON.parse(atob(data.content));
+                return { transactions: content.transactions, lastModified: data.sha, timestamp: content.timestamp };
+            }
+        } catch (e) { console.log("No cloud data yet", e); }
+        return null;
+    }
+    
+    async function saveToGitHub(transactionsData) {
+        const token = localStorage.getItem("github_token");
+        if (!token) return false;
+        
+        const content = {
+            transactions: transactionsData,
+            timestamp: new Date().toISOString(),
+            lastUpdatedBy: navigator.userAgent
+        };
+        
+        const encodedContent = btoa(JSON.stringify(content, null, 2));
+        
+        // First, get current file SHA if exists
+        let sha = null;
+        try {
+            const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                headers: { "Authorization": `token ${token}` }
+            });
+            if (getResponse.ok) {
+                const data = await getResponse.json();
+                sha = data.sha;
+            }
+        } catch(e) {}
+        
+        const body = {
+            message: `Update transactions - ${new Date().toLocaleString()}`,
+            content: encodedContent,
+            branch: "main"
+        };
+        if (sha) body.sha = sha;
+        
+        try {
+            const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                method: "PUT",
+                headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            return response.ok;
+        } catch(e) { return false; }
+    }
+    
+    // Smart sync: compare timestamps and merge intelligently
+    async function smartSync() {
+        const syncStatus = document.getElementById("syncStatus");
+        syncStatus.innerHTML = "🔄 Syncing...";
+        syncStatus.className = "sync-status syncing";
+        
+        const localData = localStorage.getItem("bdt_money_manager");
+        let localTransactions = localData ? JSON.parse(localData) : null;
+        let localTime = localStorage.getItem("bdt_last_modified") || "0";
+        
+        const cloudData = await loadFromGitHub();
+        
+        if (cloudData && cloudData.transactions) {
+            const cloudTime = cloudData.timestamp || "0";
+            
+            // Compare timestamps - use the newer one
+            if (new Date(cloudTime) > new Date(localTime)) {
+                // Cloud is newer - restore from cloud
+                transactions = cloudData.transactions;
+                localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
+                localStorage.setItem("bdt_last_modified", cloudTime);
+                syncStatus.innerHTML = "☁️ Synced from cloud (newer)";
+                renderAll();
+            } else if (new Date(localTime) > new Date(cloudTime) && localTransactions) {
+                // Local is newer - push to cloud
+                const saved = await saveToGitHub(transactions);
+                if (saved) {
+                    localStorage.setItem("bdt_last_modified", new Date().toISOString());
+                    syncStatus.innerHTML = "📤 Synced to cloud";
+                } else {
+                    syncStatus.innerHTML = "⚠️ Cloud save failed";
+                }
+            } else {
+                syncStatus.innerHTML = "✅ Already in sync";
+            }
+        } else if (localTransactions) {
+            // No cloud data, push local
+            const saved = await saveToGitHub(transactions);
+            if (saved) {
+                localStorage.setItem("bdt_last_modified", new Date().toISOString());
+                syncStatus.innerHTML = "📤 Backed up to cloud";
+            }
+        }
+        
+        setTimeout(() => {
+            if (localStorage.getItem("github_token")) {
+                syncStatus.innerHTML = "☁️ Auto-sync enabled";
+                syncStatus.className = "sync-status synced";
+            } else {
+                syncStatus.innerHTML = "💾 Local only (no token)";
+                syncStatus.className = "sync-status";
+            }
+        }, 3000);
+        
+        syncStatus.className = "sync-status";
+    }
+    
+    async function forceSync() {
+        const token = localStorage.getItem("github_token");
+        if (!token) {
+            const newToken = prompt("Enter your GitHub Personal Access Token (repo scope):\nGet it from https://github.com/settings/tokens");
+            if (newToken) {
+                localStorage.setItem("github_token", newToken);
+                await smartSync();
+            } else {
+                alert("Without token, cloud sync is disabled. Use Export/Import for manual sync.");
+            }
+        } else {
+            await smartSync();
+        }
+    }
     
     function updateIncomeSubCat() {
         const main = document.getElementById("incomeCategory").value;
@@ -180,18 +330,31 @@
                 { id: Date.now()+1, type: "income", category: "Office", subCategory: "Salary", amount: 55000, locationOrMethod: "Bank", date: today },
                 { id: Date.now()+2, type: "expense", category: "Food", subCategory: "Restaurant", amount: 1200, locationOrMethod: "Cash", date: today },
             ];
+            localStorage.setItem("bdt_last_modified", new Date().toISOString());
         }
     }
     
-    function saveToLocal() {
+    async function saveToLocal() {
         localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
+        localStorage.setItem("bdt_last_modified", new Date().toISOString());
         updateStats();
-        document.getElementById("syncStatus").innerHTML = "💾 Saved to Local Storage";
-        setTimeout(() => { document.getElementById("syncStatus").innerHTML = "💾 Local Storage"; }, 1500);
+        
+        // Auto-sync to cloud if token exists
+        const token = localStorage.getItem("github_token");
+        if (token) {
+            await saveToGitHub(transactions);
+            const syncStatus = document.getElementById("syncStatus");
+            syncStatus.innerHTML = "☁️ Synced";
+            setTimeout(() => {
+                if (localStorage.getItem("github_token")) {
+                    syncStatus.innerHTML = "☁️ Auto-sync enabled";
+                }
+            }, 2000);
+        }
     }
     
     function exportData() {
-        const dataStr = JSON.stringify(transactions, null, 2);
+        const dataStr = JSON.stringify({ transactions, lastModified: new Date().toISOString() }, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -199,8 +362,6 @@
         a.download = `bdt_backup_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        document.getElementById("syncStatus").innerHTML = "📤 Export complete!";
-        setTimeout(() => { document.getElementById("syncStatus").innerHTML = "💾 Local Storage"; }, 2000);
     }
     
     function importData() {
@@ -211,13 +372,17 @@
             const file = e.target.files[0];
             if(!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = async (ev) => {
                 try {
                     const imported = JSON.parse(ev.target.result);
-                    transactions = imported;
-                    saveToLocal();
+                    if (imported.transactions) {
+                        transactions = imported.transactions;
+                    } else {
+                        transactions = imported;
+                    }
+                    await saveToLocal();
                     renderAll();
-                    alert("✅ Import successful! Your data has been restored.");
+                    alert("✅ Import successful! Data synced to cloud.");
                 } catch(err) { alert("Invalid backup file"); }
             };
             reader.readAsText(file);
@@ -225,6 +390,7 @@
         input.click();
     }
     
+    // CRUD operations
     function addIncome() {
         let amount = parseFloat(document.getElementById("incomeAmount").value);
         if(isNaN(amount) || amount<=0) { alert("Valid amount"); return; }
@@ -249,7 +415,7 @@
         saveToLocal(); renderAll(); document.getElementById("expenseAmount").value = "";
     }
     
-    function deleteTransaction(id) { if(confirm("Delete this transaction?")) { transactions = transactions.filter(t=>t.id!==id); saveToLocal(); renderAll(); } }
+    function deleteTransaction(id) { if(confirm("Delete?")) { transactions = transactions.filter(t=>t.id!==id); saveToLocal(); renderAll(); } }
     function startEdit(id) { editModeId = id; renderAll(); }
     function saveEdit(id) {
         const newAmount = parseFloat(document.getElementById(`edit_amount_${id}`)?.value);
@@ -338,7 +504,7 @@
     
     function renderAll() { updateStats(); renderTable(currentPeriod); }
     
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
         loadFromLocal();
         const today = new Date().toISOString().slice(0,10);
         if(!document.getElementById("incomeDate").value) document.getElementById("incomeDate").value = today;
@@ -349,9 +515,12 @@
         document.getElementById("addIncomeBtn").addEventListener("click", addIncome);
         document.getElementById("addExpenseBtn").addEventListener("click", addExpense);
         document.querySelectorAll(".filter-btn").forEach(btn=>btn.addEventListener("click",()=>setActivePeriod(btn.getAttribute("data-period"))));
+        document.getElementById("forceSyncBtn").addEventListener("click", forceSync);
         document.getElementById("exportBtn").addEventListener("click", exportData);
         document.getElementById("importBtn").addEventListener("click", importData);
+        
         renderAll();
+        await smartSync();
     });
 </script>
 </body>
