@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BDT Wallet — Apple Style</title>
+    <title>BDT Wallet — Bank & Cash Balance</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -19,7 +19,6 @@
             color: #1c1c1e;
         }
 
-        /* main app card (iOS-style) */
         .app-container {
             max-width: 1280px;
             margin: 0 auto;
@@ -27,14 +26,13 @@
             border-radius: 48px;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
             overflow: hidden;
-            transition: all 0.2s ease;
         }
 
         .container-inner {
             padding: 24px 22px 32px;
         }
 
-        /* header — flexible row */
+        /* header */
         .header-row {
             display: flex;
             justify-content: space-between;
@@ -59,7 +57,6 @@
         .title-section p {
             font-size: 0.75rem;
             color: #8e8e93;
-            font-weight: 470;
         }
 
         .status-group {
@@ -75,7 +72,6 @@
             border-radius: 40px;
             font-size: 0.72rem;
             font-weight: 510;
-            color: #1c1c1e;
         }
 
         .last-mod {
@@ -101,7 +97,6 @@
             font-weight: 500;
             color: #007aff;
             cursor: pointer;
-            transition: 0.2s;
         }
 
         .balance-pill {
@@ -118,7 +113,55 @@
             font-weight: 700;
         }
 
-        /* 2‑col forms: always side‑by‑side on desktop, stacked on mobile */
+        /* bank/cash highlight row */
+        .money-split {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .bank-card, .cash-card {
+            flex: 1;
+            background: #f8f9fc;
+            border-radius: 32px;
+            padding: 18px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02), 0 0 0 1px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
+        }
+
+        .bank-card {
+            border-left: 5px solid #007aff;
+        }
+
+        .cash-card {
+            border-left: 5px solid #34c759;
+        }
+
+        .money-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6c6c70;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .money-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1c1c1e;
+            letter-spacing: -0.5px;
+        }
+
+        .money-amount small {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #8e8e93;
+        }
+
+        /* two‑col forms */
         .two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -126,7 +169,6 @@
             margin-bottom: 32px;
         }
 
-        /* cards styling */
         .card {
             background: #ffffff;
             border-radius: 32px;
@@ -145,13 +187,8 @@
             border-left: 5px solid;
         }
 
-        .income-title {
-            border-left-color: #34c759;
-        }
-
-        .expense-title {
-            border-left-color: #ff3b30;
-        }
+        .income-title { border-left-color: #34c759; }
+        .expense-title { border-left-color: #ff3b30; }
 
         .form-stack {
             display: flex;
@@ -178,8 +215,6 @@
             padding: 14px 18px;
             font-size: 0.9rem;
             font-family: inherit;
-            color: #1c1c1e;
-            transition: all 0.2s ease;
             outline: none;
         }
 
@@ -198,16 +233,12 @@
             text-align: center;
         }
 
-        .apple-btn:active {
-            transform: scale(0.97);
-            background: #005fc1;
-        }
-
+        .apple-btn:active { transform: scale(0.97); background: #005fc1; }
         .apple-btn:disabled {
             background: #a9c0e6;
             opacity: 0.65;
-            transform: none;
             cursor: not-allowed;
+            transform: none;
         }
 
         .stats-chips {
@@ -237,10 +268,9 @@
         .savings-banner .savings-number {
             font-size: 2rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
         }
 
-        /* ----- mobile/desktop layout for transactions + chart ----- */
+        /* report + chart: stack on mobile */
         .report-chart-flex {
             display: flex;
             flex-wrap: wrap;
@@ -248,7 +278,6 @@
             margin-top: 8px;
         }
 
-        /* desktop: side by side */
         .report-panel {
             flex: 2;
             min-width: 260px;
@@ -267,14 +296,8 @@
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
         }
 
-        /* on mobile (< 800px) we make them stack vertically */
         @media (max-width: 800px) {
-            .report-chart-flex {
-                flex-direction: column;
-            }
-            .chart-panel {
-                margin-top: 0;
-            }
+            .report-chart-flex { flex-direction: column; }
         }
 
         .filter-bar {
@@ -300,9 +323,7 @@
             border-radius: 40px;
             font-size: 0.8rem;
             font-weight: 500;
-            color: #1c1c1e;
             cursor: pointer;
-            transition: 0.2s;
         }
 
         .segment-btn.active {
@@ -311,7 +332,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        /* beautiful, compact table */
         .table-wrap {
             overflow-x: auto;
             padding: 0 16px 20px 16px;
@@ -336,13 +356,8 @@
             border-bottom: 0.5px solid #f0f0f4;
         }
 
-        .income-row {
-            background-color: rgba(52, 199, 89, 0.04);
-        }
-
-        .expense-row {
-            background-color: rgba(255, 59, 48, 0.04);
-        }
+        .income-row { background-color: rgba(52, 199, 89, 0.04); }
+        .expense-row { background-color: rgba(255, 59, 48, 0.04); }
 
         .mini-btn {
             background: none;
@@ -355,25 +370,10 @@
             cursor: pointer;
         }
 
-        .edit-mini {
-            background: #e9e9ef;
-            color: #007aff;
-        }
-
-        .delete-mini {
-            background: #e9e9ef;
-            color: #ff3b30;
-        }
-
-        .save-mini {
-            background: #34c759;
-            color: white;
-        }
-
-        .cancel-mini {
-            background: #e9e9ef;
-            color: #8e8e93;
-        }
+        .edit-mini { background: #e9e9ef; color: #007aff; }
+        .delete-mini { background: #e9e9ef; color: #ff3b30; }
+        .save-mini { background: #34c759; color: white; }
+        .cancel-mini { background: #e9e9ef; color: #8e8e93; }
 
         .period-stats {
             display: flex;
@@ -397,46 +397,23 @@
             padding-top: 20px;
         }
 
-        /* extra small adjustments */
         @media (max-width: 700px) {
-            body {
-                padding: 12px;
-            }
-            .container-inner {
-                padding: 18px 16px 24px;
-            }
-            .two-col {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            .header-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .status-group {
-                align-items: flex-start;
-            }
-            .balance-pill {
-                align-self: center;
-                width: fit-content;
-            }
-            .segment-btn {
-                padding: 6px 12px;
-                font-size: 0.7rem;
-            }
-            .transaction-table {
-                font-size: 0.7rem;
-            }
-            .mini-btn {
-                padding: 4px 8px;
-            }
+            body { padding: 12px; }
+            .container-inner { padding: 18px 16px 24px; }
+            .two-col { grid-template-columns: 1fr; gap: 20px; }
+            .header-row { flex-direction: column; align-items: stretch; }
+            .status-group { align-items: flex-start; }
+            .balance-pill { align-self: center; width: fit-content; }
+            .segment-btn { padding: 6px 12px; font-size: 0.7rem; }
+            .transaction-table { font-size: 0.7rem; }
+            .money-amount { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="container-inner">
-        <!-- Apple header -->
+        <!-- header -->
         <div class="header-row">
             <div class="title-section">
                 <h1>💰 BDT Wallet</h1>
@@ -451,12 +428,33 @@
                     <button id="importBtn" class="icon-btn">📂 Import</button>
                 </div>
             </div>
-            <div class="balance-pill">💰 <span id="totalBalance">0</span> ৳</div>
+            <div class="balance-pill">💰 Total: <span id="totalBalance">0</span> ৳</div>
         </div>
 
-        <!-- two column forms: always side by side on desktop, stacked on mobile -->
+        <!-- NEW: Bank & Cash balance cards (actual money split) -->
+        <div class="money-split">
+            <div class="bank-card">
+                <div class="money-label">
+                    🏦 Bank Account
+                </div>
+                <div class="money-amount">
+                    <span id="bankAmount">0</span> <small>৳</small>
+                </div>
+                <div style="font-size:0.7rem; color:#8e8e93; margin-top: 8px;">available balance</div>
+            </div>
+            <div class="cash-card">
+                <div class="money-label">
+                    💵 Cash in Hand
+                </div>
+                <div class="money-amount">
+                    <span id="cashAmount">0</span> <small>৳</small>
+                </div>
+                <div style="font-size:0.7rem; color:#8e8e93; margin-top: 8px;">available cash</div>
+            </div>
+        </div>
+
+        <!-- forms -->
         <div class="two-col">
-            <!-- INCOME with new categories -->
             <div class="card">
                 <div class="card-title income-title">📈 Add Income</div>
                 <div class="form-stack">
@@ -491,7 +489,6 @@
                 </div>
             </div>
 
-            <!-- EXPENSE full categories -->
             <div class="card">
                 <div class="card-title expense-title">📉 Add Expense</div>
                 <div class="form-stack">
@@ -528,15 +525,15 @@
 
         <!-- Savings banner -->
         <div class="savings-banner">
-            <div style="font-weight: 470; margin-bottom: 6px;">💰 Savings = Income − Expense</div>
+            <div style="margin-bottom: 6px;">💰 Savings = Total Income − Total Expense</div>
             <div class="savings-number" id="savingsAmount">0 ৳</div>
         </div>
 
-        <!-- Transactions + Chart: on mobile they will be stacked (flex-direction column) -->
+        <!-- Transactions + chart -->
         <div class="report-chart-flex">
             <div class="report-panel">
                 <div class="filter-bar">
-                    <h3 style="font-weight: 590; font-size: 1.25rem;">📋 Transactions</h3>
+                    <h3 style="font-weight: 590;">📋 Transactions</h3>
                     <div class="segment">
                         <button data-period="daily" class="segment-btn">Daily</button>
                         <button data-period="weekly" class="segment-btn">Weekly</button>
@@ -558,19 +555,18 @@
                     <div class="chip">✨ Period Savings: <span id="periodSavings">0</span> ৳</div>
                 </div>
             </div>
-
             <div class="chart-panel">
-                <h3 style="font-weight: 590; font-size: 1.2rem; margin-bottom: 12px;">📊 Income vs Expense</h3>
+                <h3 style="font-weight: 590; margin-bottom: 12px;">📊 Income vs Expense</h3>
                 <canvas id="barChart"></canvas>
                 <div style="text-align:center; font-size: 0.7rem; margin-top: 12px; color:#8e8e93;">🟢 Income &nbsp; 🔴 Expense</div>
             </div>
         </div>
-        <div class="footer-note">✨ Apple interface · DPS · FDR · Saving categories · Auto cloud sync</div>
+        <div class="footer-note">✨ Bank & Cash balance update automatically | Cloud sync</div>
     </div>
 </div>
 
 <script>
-    // -------------------- CONFIGURATION --------------------
+    // -------------------- CONFIG --------------------
     const GITHUB_USERNAME = "sufi-e";
     const GITHUB_REPO = "bdt-money-manager";
     let transactions = [];
@@ -578,7 +574,7 @@
     let editModeId = null;
     let barChart = null;
 
-    // Income subcategories (including DPS, FDR, Saving, OtherIncome)
+    // income & expense subcategories
     const incomeSubMap = {
         "Office": ["Salary", "Bonus", "Gift"],
         "Tuition": ["Coaching", "Student"],
@@ -605,7 +601,6 @@
         "Other": ["Miscellaneous"]
     };
 
-    // helpers – dynamic subcategories
     function updateIncomeSubCat() {
         const main = document.getElementById("incomeCategory").value;
         const sub = document.getElementById("incomeSubCat");
@@ -628,14 +623,12 @@
         }
     }
 
-    // form validation (enables button only when all required fields are filled)
     function checkIncomeValid() {
         const cat = document.getElementById("incomeCategory").value;
         const sub = document.getElementById("incomeSubCat").value;
         const amt = parseFloat(document.getElementById("incomeAmount").value);
         const date = document.getElementById("incomeDate").value;
-        const btn = document.getElementById("addIncomeBtn");
-        btn.disabled = !(cat && sub && amt > 0 && date);
+        document.getElementById("addIncomeBtn").disabled = !(cat && sub && amt > 0 && date);
     }
 
     function checkExpenseValid() {
@@ -643,11 +636,55 @@
         const sub = document.getElementById("expenseSubCat").value;
         const amt = parseFloat(document.getElementById("expenseAmount").value);
         const date = document.getElementById("expenseDate").value;
-        const btn = document.getElementById("addExpenseBtn");
-        btn.disabled = !(cat && sub && amt > 0 && date);
+        document.getElementById("addExpenseBtn").disabled = !(cat && sub && amt > 0 && date);
     }
 
-    // last modified UI
+    // --- Core balance calculations (Bank vs Cash) ---
+    function calculateBankCashBalance() {
+        let bankBalance = 0;
+        let cashBalance = 0;
+        transactions.forEach(t => {
+            const method = t.locationOrMethod;
+            const amount = t.amount;
+            if (t.type === "income") {
+                if (method === "Bank") bankBalance += amount;
+                else if (method === "Cash") cashBalance += amount;
+            } else if (t.type === "expense") {
+                if (method === "Bank") bankBalance -= amount;
+                else if (method === "Cash") cashBalance -= amount;
+            }
+        });
+        return { bankBalance, cashBalance };
+    }
+
+    function updateBankCashUI() {
+        const { bankBalance, cashBalance } = calculateBankCashBalance();
+        document.getElementById("bankAmount").innerText = bankBalance.toLocaleString();
+        document.getElementById("cashAmount").innerText = cashBalance.toLocaleString();
+    }
+
+    // --- totals for stats chips (total income/expense per location)
+    function updateStatsUI() {
+        let totalInc = 0, totalExp = 0, bankTotal = 0, cashTotal = 0;
+        transactions.forEach(t => {
+            if (t.type === "income") {
+                totalInc += t.amount;
+                if (t.locationOrMethod === "Bank") bankTotal += t.amount;
+                else if (t.locationOrMethod === "Cash") cashTotal += t.amount;
+            } else {
+                totalExp += t.amount;
+            }
+        });
+        document.getElementById("totalIncomeSum").innerText = totalInc.toLocaleString();
+        document.getElementById("totalExpenseSum").innerText = totalExp.toLocaleString();
+        document.getElementById("bankTotal").innerText = bankTotal.toLocaleString();
+        document.getElementById("cashTotal").innerText = cashTotal.toLocaleString();
+        document.getElementById("totalBalance").innerText = (totalInc - totalExp).toLocaleString();
+        document.getElementById("savingsAmount").innerHTML = (totalInc - totalExp).toLocaleString() + " ৳";
+        updateBankCashUI();   // refresh bank/cash cards
+    }
+
+    // --- last modified ---
     function updateLastModifiedUI() {
         let lm = localStorage.getItem("bdt_last_modified");
         if (lm) {
@@ -656,7 +693,7 @@
         } else document.getElementById("lastModifiedDisplay").innerHTML = `last sync just now`;
     }
 
-    // ---------- GitHub sync (light, optional) ----------
+    // --- GitHub sync (optional) ---
     async function getGitHubToken() {
         let token = localStorage.getItem("github_token");
         if (!token) {
@@ -678,7 +715,7 @@
                 const content = JSON.parse(atob(data.content));
                 return { transactions: content.transactions, timestamp: content.timestamp };
             }
-        } catch(e) {}
+        } catch(e) { }
         return null;
     }
 
@@ -693,7 +730,7 @@
                 headers: { "Authorization": `token ${token}` }
             });
             if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
-        } catch(e) {}
+        } catch(e) { }
         const body = { message: `update ${new Date().toISOString()}`, content: encoded, branch: "main" };
         if (sha) body.sha = sha;
         const resp = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
@@ -728,7 +765,7 @@
         setTimeout(() => statusDiv.innerHTML = localStorage.getItem("github_token") ? "☁️ auto‑sync" : "💾 local", 2000);
     }
 
-    // local storage management
+    // --- local storage ---
     function loadFromLocal() {
         const stored = localStorage.getItem("bdt_money_manager");
         if (stored) transactions = JSON.parse(stored);
@@ -752,7 +789,7 @@
         if (localStorage.getItem("github_token")) await saveToGitHub(transactions);
     }
 
-    // CRUD
+    // --- CRUD ---
     function addIncome() {
         let amount = parseFloat(document.getElementById("incomeAmount").value);
         if (isNaN(amount) || amount <= 0) return;
@@ -796,7 +833,7 @@
     }
     function cancelEdit() { editModeId = null; renderAll(); }
 
-    // period & chart
+    // --- period & chart ---
     function getStartOfWeek(date) { let d=new Date(date); let day=d.getDay(); let diff=(day>=5)?(day-5):(day+2); d.setDate(d.getDate()-diff); d.setHours(0,0,0,0); return d; }
     function getFilteredByPeriod(period) {
         let now=new Date(), start,end;
@@ -892,20 +929,6 @@
         updateChartAndPeriodStats(period);
     }
 
-    function updateStatsUI() {
-        let totalInc=0, totalExp=0, bank=0, cash=0;
-        transactions.forEach(t=>{
-            if(t.type==="income") { totalInc+=t.amount; if(t.locationOrMethod==="Bank") bank+=t.amount; else cash+=t.amount; }
-            else { totalExp+=t.amount; if(t.locationOrMethod==="Bank") bank-=t.amount; else cash-=t.amount; }
-        });
-        document.getElementById("totalIncomeSum").innerText = totalInc.toLocaleString();
-        document.getElementById("totalExpenseSum").innerText = totalExp.toLocaleString();
-        document.getElementById("bankTotal").innerText = bank.toLocaleString();
-        document.getElementById("cashTotal").innerText = cash.toLocaleString();
-        document.getElementById("totalBalance").innerText = (totalInc-totalExp).toLocaleString();
-        document.getElementById("savingsAmount").innerHTML = (totalInc-totalExp).toLocaleString() + " ৳";
-    }
-
     function setPeriod(period) {
         currentPeriod = period;
         document.querySelectorAll(".segment-btn").forEach(btn=>{
@@ -917,7 +940,7 @@
 
     function renderAll() { updateStatsUI(); renderTransactionTable(currentPeriod); }
 
-    // ----- initialize everything -----
+    // --- initialization ---
     document.addEventListener("DOMContentLoaded", async () => {
         loadFromLocal();
         let today = new Date().toISOString().slice(0,10);
