@@ -1,503 +1,594 @@
+Here is an HTML document that creates a money management system with an Apple-inspired, device-responsive design, featuring a clean interface, dynamic charts, and full transaction management.
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BDT Money Manager - Smart Forms + Last Modified</title>
+    <title>BDT Wallet — Apple Style</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', sans-serif;
-        }
-
-        :root {
-            --primary-dark: #1e293b;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --bg-light: #f0f4f8;
         }
 
         body {
-            background: var(--bg-light);
-            padding: 12px;
-            color: #1e293b;
+            background: #f5f5f7;
+            font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+            padding: 20px 16px;
+            color: #1c1c1e;
         }
 
+        /* main card container — iOS glass */
         .app-container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
+            background: #ffffff;
+            border-radius: 48px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            transition: all 0.2s ease;
         }
 
-        .header {
+        /* inner padding changes based on device */
+        .container-inner {
+            padding: 24px 22px 32px;
+        }
+
+        /* ----- header row (apple style) ----- */
+        .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
-            background: white;
-            padding: 16px;
-            border-radius: 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            gap: 14px;
+            margin-bottom: 28px;
+            padding-bottom: 8px;
+            border-bottom: 0.5px solid #e9ecef;
         }
 
-        .logo-area h1 {
-            font-size: 1.3rem;
-            background: linear-gradient(135deg, #0f2b3d, #1e7e34);
+        .title-section h1 {
+            font-size: 1.85rem;
+            font-weight: 620;
+            background: linear-gradient(135deg, #1c2e3a, #2c6e3c);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            letter-spacing: -0.3px;
         }
 
-        .logo-area p {
-            font-size: 0.7rem;
-            color: #2c6e2f;
+        .title-section p {
+            font-size: 0.75rem;
+            color: #8e8e93;
+            font-weight: 470;
         }
 
-        .sync-status {
-            background: #e2e8f0;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.7rem;
+        .status-group {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-end;
             gap: 6px;
         }
 
-        .last-modified {
-            background: #f1f5f9;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            color: #475569;
-        }
-
-        .balance-card {
-            background: var(--primary-dark);
-            padding: 8px 16px;
-            border-radius: 30px;
-            color: white;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .balance-card span {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        @media (min-width: 768px) {
-            body { padding: 20px; }
-            .dashboard-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
-            .header { padding: 16px 24px; }
-            .logo-area h1 { font-size: 1.7rem; }
-            .balance-card span { font-size: 1.5rem; }
-        }
-
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        @media (min-width: 768px) {
-            .card { border-radius: 28px; padding: 20px; }
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-left: 4px solid;
-            padding-left: 12px;
-        }
-
-        @media (min-width: 768px) {
-            .card-title { font-size: 1.4rem; border-left-width: 6px; padding-left: 14px; }
-        }
-
-        .income-title { border-left-color: var(--success); }
-        .expense-title { border-left-color: var(--danger); }
-
-        .form-row {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        @media (min-width: 600px) {
-            .form-row { flex-direction: row; gap: 12px; }
-        }
-
-        select, input, button {
-            padding: 12px;
+        .sync-badge {
+            background: #e9e9ef;
+            padding: 6px 16px;
             border-radius: 40px;
-            border: 1px solid #e2e8f0;
-            background: #f9fafb;
-            font-size: 0.9rem;
-            width: 100%;
+            font-size: 0.72rem;
+            font-weight: 510;
+            color: #1c1c1e;
         }
 
-        @media (min-width: 600px) {
-            select, input, button { flex: 1; min-width: 120px; }
-        }
-
-        /* Required field styling */
-        .required-field {
-            border-left: 3px solid var(--danger);
-        }
-
-        .field-hint {
+        .last-mod {
             font-size: 0.65rem;
-            color: #94a3b8;
-            margin-top: 4px;
-            padding-left: 12px;
+            color: #8e8e93;
+            background: #f8f8fc;
+            padding: 4px 14px;
+            border-radius: 40px;
         }
 
-        .add-btn {
-            background: var(--primary-dark);
-            color: white;
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .icon-btn {
+            background: #f2f2f7;
             border: none;
+            padding: 6px 14px;
+            border-radius: 32px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #007aff;
             cursor: pointer;
-            font-weight: 600;
             transition: 0.2s;
         }
 
-        .add-btn:hover { background: #334155; transform: scale(0.98); }
-
-        .add-btn.disabled, .add-btn:disabled {
-            background: #cbd5e1;
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.6;
-        }
-
-        .validation-message {
-            font-size: 0.7rem;
-            color: var(--danger);
-            margin-top: 8px;
-            text-align: center;
-            display: none;
-        }
-
-        .summary-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .stat-badge {
-            background: #f1f5f9;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        @media (min-width: 768px) {
-            .stat-badge { padding: 8px 14px; font-size: 0.9rem; }
-        }
-
-        .savings-card {
-            background: linear-gradient(135deg, var(--success), #059669);
+        .balance-pill {
+            background: #1c2e3a;
+            padding: 8px 24px;
+            border-radius: 48px;
             color: white;
-            border-radius: 20px;
-            padding: 12px 16px;
             text-align: center;
-            margin-bottom: 16px;
+            font-weight: 500;
         }
 
-        .savings-card .savings-amount { font-size: 1.5rem; font-weight: bold; }
-
-        @media (min-width: 768px) {
-            .savings-card { border-radius: 28px; padding: 12px 20px; margin-bottom: 20px; }
-            .savings-card .savings-amount { font-size: 2rem; }
+        .balance-pill span {
+            font-size: 1.6rem;
+            font-weight: 700;
         }
 
-        .report-chart-container {
+        /* 2-col layout: dynamic grid */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        /* on mobile -> single column, smooth */
+        @media (max-width: 700px) {
+            body {
+                padding: 12px;
+            }
+            .container-inner {
+                padding: 18px 16px 24px;
+            }
+            .two-col {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .header-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .status-group {
+                align-items: flex-start;
+            }
+            .balance-pill {
+                align-self: center;
+                width: fit-content;
+            }
+            .chart-section canvas {
+                min-height: 260px;
+            }
+        }
+
+        /* iPhone-style cards */
+        .card {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 590;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 10px;
+            border-left: 5px solid;
+        }
+
+        .income-title {
+            border-left-color: #34c759;
+        }
+
+        .expense-title {
+            border-left-color: #ff3b30;
+        }
+
+        /* forms — apple dropdown style */
+        .form-stack {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            margin-top: 16px;
+            margin-bottom: 20px;
         }
 
-        @media (min-width: 900px) {
-            .report-chart-container { flex-direction: row; gap: 24px; margin-top: 24px; }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-        .report-section, .chart-section {
+        .form-row select, .form-row input {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        select, input, .apple-btn {
+            background: #f9f9fb;
+            border: 1px solid #e3e4e8;
+            border-radius: 44px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            color: #1c1c1e;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: #007aff;
             background: white;
-            border-radius: 24px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+
+        .apple-btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .apple-btn:active {
+            transform: scale(0.97);
+            background: #005fc1;
+        }
+
+        .apple-btn:disabled {
+            background: #a9c0e6;
+            opacity: 0.65;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        /* summary chips */
+        .stats-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .chip {
+            background: #f2f2f7;
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .savings-banner {
+            background: linear-gradient(135deg, #34c759, #2c8e3c);
+            border-radius: 36px;
+            padding: 16px 24px;
+            text-align: center;
+            margin-bottom: 28px;
+            color: white;
+        }
+
+        .savings-banner .savings-number {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* report + chart area */
+        .report-chart-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 8px;
+        }
+
+        .report-panel {
             flex: 2;
+            background: #ffffff;
+            border-radius: 36px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
         }
 
-        .chart-section { flex: 1; }
-
-        @media (min-width: 768px) {
-            .report-section, .chart-section { border-radius: 28px; padding: 20px; }
+        .chart-panel {
+            flex: 1.5;
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 20px 18px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.02);
         }
 
-        canvas { max-height: 350px; width: 100% !important; }
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 20px 20px 8px 20px;
+        }
 
-        .report-filters {
+        .segment {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
+            background: #f2f2f7;
+            border-radius: 60px;
+            padding: 4px;
+        }
+
+        .segment-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1c1c1e;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .segment-btn.active {
+            background: #ffffff;
+            color: #007aff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* compact & beautiful table */
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 16px 20px 16px;
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+
+        .transaction-table th {
+            text-align: left;
+            padding: 14px 6px;
+            color: #6c6c70;
+            font-weight: 510;
+            border-bottom: 0.5px solid #e9ecef;
+        }
+
+        .transaction-table td {
+            padding: 12px 6px;
+            border-bottom: 0.5px solid #f0f0f4;
+        }
+
+        .income-row {
+            background-color: rgba(52, 199, 89, 0.04);
+        }
+
+        .expense-row {
+            background-color: rgba(255, 59, 48, 0.04);
+        }
+
+        .mini-btn {
+            background: none;
+            border: none;
+            font-size: 0.7rem;
+            font-weight: 590;
+            padding: 6px 12px;
+            border-radius: 32px;
+            margin: 0 3px;
+            cursor: pointer;
+        }
+
+        .edit-mini {
+            background: #e9e9ef;
+            color: #007aff;
+        }
+
+        .delete-mini {
+            background: #e9e9ef;
+            color: #ff3b30;
+        }
+
+        .save-mini {
+            background: #34c759;
+            color: white;
+        }
+
+        .cancel-mini {
+            background: #e9e9ef;
+            color: #8e8e93;
+        }
+
+        .period-stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 12px 20px 20px;
             flex-wrap: wrap;
         }
 
-        .filter-btn {
-            background: #eef2ff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.75rem;
+        canvas {
+            max-height: 330px;
+            width: 100% !important;
         }
 
-        @media (min-width: 768px) {
-            .filter-btn { padding: 8px 18px; font-size: 0.9rem; }
-        }
-
-        .filter-btn.active { background: var(--primary-dark); color: white; }
-
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 500px;
-        }
-
-        th, td {
-            padding: 8px 6px;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: left;
-            font-size: 0.7rem;
-        }
-
-        @media (min-width: 768px) {
-            th, td { padding: 12px 8px; font-size: 0.9rem; }
-        }
-
-        .income-row { background: #ecfdf5; }
-        .expense-row { background: #fef2f2; }
-
-        .action-btn {
-            padding: 4px 8px;
-            border-radius: 30px;
-            font-size: 0.6rem;
-            margin: 0 2px;
-            border: none;
-            cursor: pointer;
-        }
-
-        @media (min-width: 768px) {
-            .action-btn { padding: 6px 12px; font-size: 0.7rem; margin: 0 3px; }
-        }
-
-        .edit-btn { background: var(--info); color: white; }
-        .delete-btn { background: var(--danger); color: white; }
-        .save-btn { background: var(--success); color: white; }
-        .cancel-btn { background: #6b7280; color: white; }
-
-        .manual-buttons {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-        }
-
-        .small-btn {
-            padding: 4px 8px;
+        .footer-note {
             font-size: 0.65rem;
-            background: #6b7280;
-        }
-
-        .footer {
             text-align: center;
-            margin-top: 20px;
-            font-size: 0.65rem;
-            color: #475569;
+            color: #8e8e93;
+            border-top: 0.5px solid #e9ecef;
+            margin-top: 32px;
+            padding-top: 20px;
         }
 
-        @media (min-width: 768px) {
-            .footer { margin-top: 30px; font-size: 0.75rem; }
+        @media (max-width: 550px) {
+            .container-inner {
+                padding: 16px 14px 24px;
+            }
+            .segment-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+            .transaction-table {
+                font-size: 0.7rem;
+            }
+            .mini-btn {
+                padding: 4px 8px;
+            }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <div class="header">
-        <div class="logo-area">
-            <h1>💰 BDT Money Manager</h1>
-            <p>Smart Forms · Last Modified · Auto Sync</p>
-        </div>
-        <div>
-            <div class="sync-status" id="syncStatus">🔄 Checking...</div>
-            <div class="last-modified" id="lastModifiedDisplay">📅 Last modified: Loading...</div>
-            <div class="manual-buttons">
-                <button id="forceSyncBtn" class="small-btn">🔄 Sync</button>
-                <button id="exportBtn" class="small-btn">📤 Export</button>
-                <button id="importBtn" class="small-btn">📥 Import</button>
+    <div class="container-inner">
+        <!-- Apple-style header -->
+        <div class="header-row">
+            <div class="title-section">
+                <h1>💰 BDT Wallet</h1>
+                <p>Income · Expense · DPS · FDR · Savings</p>
             </div>
-        </div>
-        <div class="balance-card">💰 <span id="totalBalance">0</span> ৳</div>
-    </div>
-
-    <div class="dashboard-grid">
-        <!-- INCOME SECTION -->
-        <div class="card">
-            <div class="card-title income-title">📈 Add Income</div>
-            <div class="form-row">
-                <select id="incomeCategory" class="required-field">
-                    <option value="">▼ Select Category</option>
-                    <option value="Office">🏢 Office</option>
-                    <option value="Tuition">📚 Tuition</option>
-                </select>
-                <select id="incomeSubCat" class="required-field">
-                    <option value="">▼ Select Sub-Category</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <input type="number" id="incomeAmount" placeholder="Amount (BDT) *" class="required-field">
-                <select id="incomeLocation">
-                    <option value="Bank">🏦 Bank</option>
-                    <option value="Cash">💵 Cash</option>
-                </select>
-                <input type="date" id="incomeDate" class="required-field">
-            </div>
-            <div class="field-hint"> </div>
-            <button id="addIncomeBtn" class="add-btn" disabled>➕ Add Income</button>
-            <div id="incomeValidationMsg" class="validation-message"></div>
-            <div class="summary-stats">
-                <div class="stat-badge">💰 Total: <span id="totalIncomeSum">0</span> ৳</div>
-                <div class="stat-badge">🏦 Bank: <span id="bankTotal">0</span> ৳</div>
-                <div class="stat-badge">💵 Cash: <span id="cashTotal">0</span> ৳</div>
-            </div>
-        </div>
-
-        <!-- EXPENSE SECTION -->
-        <div class="card">
-            <div class="card-title expense-title">📉 Add Expense</div>
-            <div class="form-row">
-                <select id="expenseCategory" class="required-field">
-                    <option value="">▼ Select Category</option>
-                    <option value="Treatment">🏥 Treatment</option>
-                    <option value="Bike">🏍️ Bike</option>
-                    <option value="Transport">🚌 Transport</option>
-                    <option value="Food">🍔 Food</option>
-                    <option value="Education">📖 Education</option>
-                    <option value="Investment">📈 Investment</option>
-                    <option value="Pocket Money">👝 Pocket Money</option>
-                    <option value="Furniture">🛋️ Furniture</option>
-                    <option value="Pet">🐾 Pet</option>
-                    <option value="Household Product">🧴 Household Product</option>
-                    <option value="Bills">⚡ Bills</option>
-                    <option value="Clothing">👕 Clothing</option>
-                    <option value="Gadget">📱 Gadget</option>
-                    <option value="Other">📌 Other</option>
-                </select>
-                <select id="expenseSubCat" class="required-field">
-                    <option value="">▼ Select Sub-Category</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <input type="number" id="expenseAmount" placeholder="Amount (BDT) *" class="required-field">
-                <select id="expenseMethod">
-                    <option value="Bank">🏦 Bank</option>
-                    <option value="Cash">💵 Cash</option>
-                </select>
-                <input type="date" id="expenseDate" class="required-field">
-            </div>
-            <div class="field-hint"> </div>
-            <button id="addExpenseBtn" class="add-btn" disabled>➖ Add Expense</button>
-            <div id="expenseValidationMsg" class="validation-message"></div>
-            <div class="summary-stats">
-                <div class="stat-badge">💸 Total Expense: <span id="totalExpenseSum">0</span> ৳</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="savings-card">
-        <h4>💰 Savings = Total Income - Total Expense</h4>
-        <div class="savings-amount" id="savingsAmount">0 ৳</div>
-    </div>
-
-    <div class="report-chart-container">
-        <div class="report-section">
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                <h3>📋 Transactions</h3>
-                <div class="report-filters">
-                    <button data-period="daily" class="filter-btn">Daily</button>
-                    <button data-period="weekly" class="filter-btn">Weekly</button>
-                    <button data-period="monthly" class="filter-btn">Monthly</button>
-                    <button data-period="yearly" class="filter-btn active">Yearly</button>
+            <div class="status-group">
+                <div class="sync-badge" id="syncStatus">☁️ ready</div>
+                <div class="last-mod" id="lastModifiedDisplay">last sync —</div>
+                <div class="action-buttons">
+                    <button id="forceSyncBtn" class="icon-btn">⟳ Sync now</button>
+                    <button id="exportBtn" class="icon-btn">📎 Export</button>
+                    <button id="importBtn" class="icon-btn">📂 Import</button>
                 </div>
             </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr><th>Date</th><th>Type</th><th>Category</th><th>Sub-Cat</th><th>Amount</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="transactionList"></tbody>
-                </table>
+            <div class="balance-pill">💰 <span id="totalBalance">0</span> ৳</div>
+        </div>
+
+        <!-- 2‑column dynamic forms -->
+        <div class="two-col">
+            <!-- INCOME (new categories DPS, FDR, Saving, Other) -->
+            <div class="card">
+                <div class="card-title income-title">📈 Add Income</div>
+                <div class="form-stack">
+                    <div class="form-row">
+                        <select id="incomeCategory">
+                            <option value="" disabled selected>Category</option>
+                            <option value="Office">🏢 Office</option>
+                            <option value="Tuition">📚 Tuition</option>
+                            <option value="DPS">🏦 DPS</option>
+                            <option value="FDR">📈 FDR</option>
+                            <option value="Saving">💰 Saving Account</option>
+                            <option value="OtherIncome">📌 Other Income</option>
+                        </select>
+                        <select id="incomeSubCat">
+                            <option value="" disabled selected>Sub‑category</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <input type="number" id="incomeAmount" placeholder="Amount (BDT)">
+                        <select id="incomeLocation">
+                            <option value="Bank">🏦 Bank</option>
+                            <option value="Cash">💵 Cash</option>
+                        </select>
+                        <input type="date" id="incomeDate">
+                    </div>
+                    <button id="addIncomeBtn" class="apple-btn">➕ Add Income</button>
+                </div>
+                <div class="stats-chips">
+                    <div class="chip">💰 Total Income: <span id="totalIncomeSum">0</span> ৳</div>
+                    <div class="chip">🏦 Bank: <span id="bankTotal">0</span> ৳</div>
+                    <div class="chip">💵 Cash: <span id="cashTotal">0</span> ৳</div>
+                </div>
             </div>
-            <div class="summary-stats" style="justify-content:center; margin-top:15px;">
-                <div class="stat-badge">📊 Period Income: <span id="periodIncome">0</span> ৳</div>
-                <div class="stat-badge">📉 Period Expense: <span id="periodExpense">0</span> ৳</div>
-                <div class="stat-badge">✨ Period Savings: <span id="periodSavings">0</span> ৳</div>
+
+            <!-- EXPENSE full categories -->
+            <div class="card">
+                <div class="card-title expense-title">📉 Add Expense</div>
+                <div class="form-stack">
+                    <div class="form-row">
+                        <select id="expenseCategory">
+                            <option value="" disabled selected>Category</option>
+                            <option value="Treatment">🏥 Treatment</option><option value="Bike">🏍️ Bike</option>
+                            <option value="Transport">🚌 Transport</option><option value="Food">🍔 Food</option>
+                            <option value="Education">📖 Education</option><option value="Investment">📈 Investment</option>
+                            <option value="Pocket Money">👝 Pocket Money</option><option value="Furniture">🛋️ Furniture</option>
+                            <option value="Pet">🐾 Pet</option><option value="Household Product">🧴 Household</option>
+                            <option value="Bills">⚡ Bills</option><option value="Clothing">👕 Clothing</option>
+                            <option value="Gadget">📱 Gadget</option><option value="Other">📌 Other</option>
+                        </select>
+                        <select id="expenseSubCat">
+                            <option value="" disabled selected>Sub‑category</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <input type="number" id="expenseAmount" placeholder="Amount (BDT)">
+                        <select id="expenseMethod">
+                            <option value="Bank">🏦 Bank</option>
+                            <option value="Cash">💵 Cash</option>
+                        </select>
+                        <input type="date" id="expenseDate">
+                    </div>
+                    <button id="addExpenseBtn" class="apple-btn">➖ Add Expense</button>
+                </div>
+                <div class="stats-chips">
+                    <div class="chip">💸 Total Expense: <span id="totalExpenseSum">0</span> ৳</div>
+                </div>
             </div>
         </div>
-        <div class="chart-section">
-            <h3>📊 Income vs Expense</h3>
-            <canvas id="barChart"></canvas>
-            <div style="text-align:center; font-size:0.7rem; margin-top:10px;">🟢 Income &nbsp; 🔴 Expense</div>
+
+        <!-- Savings banner -->
+        <div class="savings-banner">
+            <div style="font-weight: 470; margin-bottom: 6px;">💰 Savings = Income − Expense</div>
+            <div class="savings-number" id="savingsAmount">0 ৳</div>
         </div>
-    </div>
-    <div class="footer">
-        ✅ All required fields must be filled before adding | Auto-sync across all devices
+
+        <!-- Transactions + Bar chart (larger chart on all devices) -->
+        <div class="report-chart-flex">
+            <div class="report-panel">
+                <div class="filter-bar">
+                    <h3 style="font-weight: 590; font-size: 1.25rem;">📋 Transactions</h3>
+                    <div class="segment">
+                        <button data-period="daily" class="segment-btn">Daily</button>
+                        <button data-period="weekly" class="segment-btn">Weekly</button>
+                        <button data-period="monthly" class="segment-btn">Monthly</button>
+                        <button data-period="yearly" class="segment-btn active">Yearly</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="transaction-table">
+                        <thead>
+                            <tr><th>Date</th><th>Type</th><th>Category</th><th>Sub‑category</th><th>Amount</th><th>Actions</th>
+                        </thead>
+                        <tbody id="transactionList"></tbody>
+                    </table>
+                </div>
+                <div class="period-stats">
+                    <div class="chip">📊 Period Income: <span id="periodIncome">0</span> ৳</div>
+                    <div class="chip">📉 Period Expense: <span id="periodExpense">0</span> ৳</div>
+                    <div class="chip">✨ Period Savings: <span id="periodSavings">0</span> ৳</div>
+                </div>
+            </div>
+
+            <div class="chart-panel">
+                <h3 style="font-weight: 590; font-size: 1.2rem; margin-bottom: 12px;">📊 Income vs Expense</h3>
+                <canvas id="barChart"></canvas>
+                <div style="text-align:center; font-size: 0.7rem; margin-top: 12px; color:#8e8e93;">🟢 Income &nbsp; 🔴 Expense</div>
+            </div>
+        </div>
+        <div class="footer-note">✨ Apple‑inspired UI · DPS · FDR · Saving categories · Auto cloud sync</div>
     </div>
 </div>
 
 <script>
-    // GitHub Configuration
+    // -------------------- GLOBALS --------------------
     const GITHUB_USERNAME = "sufi-e";
     const GITHUB_REPO = "bdt-money-manager";
-    
     let transactions = [];
     let currentPeriod = "yearly";
     let editModeId = null;
     let barChart = null;
-    
-    // Category mappings
-    const incomeSubMap = { 
-        "Office": ["Salary", "Bonus", "Gift"], 
-        "Tuition": ["Coaching", "Student"] 
+
+    // INCOME subcategories (including new DPS, FDR, Saving)
+    const incomeSubMap = {
+        "Office": ["Salary", "Bonus", "Gift"],
+        "Tuition": ["Coaching", "Student"],
+        "DPS": ["Monthly Deposit", "Interest", "Matured"],
+        "FDR": ["Interest", "Renewal", "Matured"],
+        "Saving": ["Interest", "Deposit", "Withdrawal"],
+        "OtherIncome": ["Dividend", "Gift", "Refund", "Misc"]
     };
-    
+
     const expenseSubMap = {
         "Treatment": ["Medicine", "Medical", "Medical Equipment"],
         "Bike": ["Fuel", "Engine Oil", "Servicing"],
@@ -514,652 +605,342 @@
         "Gadget": ["Phone", "Laptop", "Tablet", "Headphone", "Accessories", "Other"],
         "Other": ["Miscellaneous"]
     };
-    
-    // Update subcategory dropdowns
+
+    // ----- helpers & UI validation (no ⚠️, just graceful)
     function updateIncomeSubCat() {
         const main = document.getElementById("incomeCategory").value;
         const sub = document.getElementById("incomeSubCat");
-        sub.innerHTML = '<option value="">▼ Select Sub-Category</option>';
+        sub.innerHTML = '<option value="" disabled selected>Sub‑category</option>';
         if (main && incomeSubMap[main]) {
             incomeSubMap[main].forEach(opt => {
-                let o = document.createElement("option");
-                o.value = opt;
-                o.textContent = opt;
-                sub.appendChild(o);
+                let o = document.createElement("option"); o.value = opt; o.textContent = opt; sub.appendChild(o);
             });
         }
-        validateIncomeForm();
     }
-    
     function updateExpenseSubCat() {
         const main = document.getElementById("expenseCategory").value;
         const sub = document.getElementById("expenseSubCat");
-        sub.innerHTML = '<option value="">▼ Select Sub-Category</option>';
+        sub.innerHTML = '<option value="" disabled selected>Sub‑category</option>';
         if (main && expenseSubMap[main]) {
             expenseSubMap[main].forEach(opt => {
-                let o = document.createElement("option");
-                o.value = opt;
-                o.textContent = opt;
-                sub.appendChild(o);
+                let o = document.createElement("option"); o.value = opt; o.textContent = opt; sub.appendChild(o);
             });
         }
-        validateExpenseForm();
     }
-    
-    // Validation functions
-    function validateIncomeForm() {
-        const category = document.getElementById("incomeCategory").value;
-        const subCategory = document.getElementById("incomeSubCat").value;
-        const amount = document.getElementById("incomeAmount").value;
+
+    function checkIncomeValid() {
+        const cat = document.getElementById("incomeCategory").value;
+        const sub = document.getElementById("incomeSubCat").value;
+        const amt = parseFloat(document.getElementById("incomeAmount").value);
         const date = document.getElementById("incomeDate").value;
-        const addBtn = document.getElementById("addIncomeBtn");
-        const validationMsg = document.getElementById("incomeValidationMsg");
-        
-        const isValid = category && subCategory && amount && parseFloat(amount) > 0 && date;
-        
-        if (isValid) {
-            addBtn.disabled = false;
-            validationMsg.style.display = "none";
-        } else {
-            addBtn.disabled = true;
-            if (!category || !subCategory) {
-                validationMsg.innerHTML = "";
-            } else if (!amount || parseFloat(amount) <= 0) {
-                validationMsg.innerHTML = "";
-            } else if (!date) {
-                validationMsg.innerHTML = "";
-            } else {
-                validationMsg.innerHTML = "";
-            }
-            validationMsg.style.display = "block";
-        }
+        const btn = document.getElementById("addIncomeBtn");
+        btn.disabled = !(cat && sub && amt > 0 && date);
     }
-    
-    function validateExpenseForm() {
-        const category = document.getElementById("expenseCategory").value;
-        const subCategory = document.getElementById("expenseSubCat").value;
-        const amount = document.getElementById("expenseAmount").value;
+    function checkExpenseValid() {
+        const cat = document.getElementById("expenseCategory").value;
+        const sub = document.getElementById("expenseSubCat").value;
+        const amt = parseFloat(document.getElementById("expenseAmount").value);
         const date = document.getElementById("expenseDate").value;
-        const addBtn = document.getElementById("addExpenseBtn");
-        const validationMsg = document.getElementById("expenseValidationMsg");
-        
-        const isValid = category && subCategory && amount && parseFloat(amount) > 0 && date;
-        
-        if (isValid) {
-            addBtn.disabled = false;
-            validationMsg.style.display = "none";
-        } else {
-            addBtn.disabled = true;
-            if (!category || !subCategory) {
-                validationMsg.innerHTML = "";
-            } else if (!amount || parseFloat(amount) <= 0) {
-                validationMsg.innerHTML = "";
-            } else if (!date) {
-                validationMsg.innerHTML = "";
-            } else {
-                validationMsg.innerHTML = "";
-            }
-            validationMsg.style.display = "block";
-        }
+        const btn = document.getElementById("addExpenseBtn");
+        btn.disabled = !(cat && sub && amt > 0 && date);
     }
-    
-    // Update last modified display
-    function updateLastModifiedDisplay() {
-        const lastModified = localStorage.getItem("bdt_last_modified");
-        if (lastModified) {
-            const date = new Date(lastModified);
-            document.getElementById("lastModifiedDisplay").innerHTML = `📅 Last modified: ${date.toLocaleString()}`;
-        } else {
-            document.getElementById("lastModifiedDisplay").innerHTML = `📅 Last modified: Just now`;
-        }
+
+    // last modified
+    function updateLastModifiedUI() {
+        let lm = localStorage.getItem("bdt_last_modified");
+        if (lm) {
+            let d = new Date(lm);
+            document.getElementById("lastModifiedDisplay").innerHTML = `last sync ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+        } else document.getElementById("lastModifiedDisplay").innerHTML = `last sync just now`;
     }
-    
-    // GitHub sync functions
+
+    // ---------- GitHub sync (lightweight) ----------
     async function getGitHubToken() {
         let token = localStorage.getItem("github_token");
         if (!token) {
-            token = prompt("🔐 For auto-sync, enter your GitHub Token:\n\nGet it from: https://github.com/settings/tokens\nSelect 'repo' scope\n\nOr click Cancel to use manual Export/Import");
-            if (token) {
-                localStorage.setItem("github_token", token);
-            }
+            let t = prompt("🔐 GitHub token (repo scope) – optional. Press Cancel to work offline.");
+            if (t) localStorage.setItem("github_token", t);
         }
-        return token;
+        return localStorage.getItem("github_token");
     }
-    
     async function loadFromGitHub() {
         const token = await getGitHubToken();
         if (!token) return null;
         try {
-            const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+            const res = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
                 headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
             });
-            if (response.status === 200) {
-                const data = await response.json();
+            if (res.ok) {
+                const data = await res.json();
                 const content = JSON.parse(atob(data.content));
-                return { transactions: content.transactions, lastModified: data.sha, timestamp: content.timestamp };
-            }
-        } catch (e) { console.log("No cloud data", e); }
-        return null;
-    }
-    
-    async function saveToGitHub(transactionsData) {
-        const token = localStorage.getItem("github_token");
-        if (!token) return false;
-        
-        const content = {
-            transactions: transactionsData,
-            timestamp: new Date().toISOString()
-        };
-        const encodedContent = btoa(JSON.stringify(content, null, 2));
-        
-        let sha = null;
-        try {
-            const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
-                headers: { "Authorization": `token ${token}` }
-            });
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                sha = data.sha;
+                return { transactions: content.transactions, timestamp: content.timestamp };
             }
         } catch(e) {}
-        
-        const body = {
-            message: `Update - ${new Date().toLocaleString()}`,
-            content: encodedContent,
-            branch: "main"
-        };
-        if (sha) body.sha = sha;
-        
-        try {
-            const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
-                method: "PUT",
-                headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
-            return response.ok;
-        } catch(e) { return false; }
+        return null;
     }
-    
-    async function smartSync() {
-        const syncStatus = document.getElementById("syncStatus");
-        syncStatus.innerHTML = "🔄 Syncing...";
-        
+    async function saveToGitHub(dataTx) {
+        const token = localStorage.getItem("github_token");
+        if (!token) return false;
+        const content = { transactions: dataTx, timestamp: new Date().toISOString() };
+        const encoded = btoa(JSON.stringify(content));
+        let sha = null;
+        try {
+            const getRes = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                headers: { "Authorization": `token ${token}` }
+            });
+            if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
+        } catch(e) {}
+        const body = { message: `update ${new Date().toISOString()}`, content: encoded, branch: "main" };
+        if (sha) body.sha = sha;
+        const resp = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+            method: "PUT", headers: { "Authorization": `token ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(body)
+        });
+        return resp.ok;
+    }
+    async function syncWithCloud() {
+        const statusDiv = document.getElementById("syncStatus");
+        statusDiv.innerHTML = "⟳ syncing...";
         const localData = localStorage.getItem("bdt_money_manager");
-        let localTransactions = localData ? JSON.parse(localData) : null;
-        let localTime = localStorage.getItem("bdt_last_modified") || "0";
-        
-        const cloudData = await loadFromGitHub();
-        
-        if (cloudData && cloudData.transactions) {
-            const cloudTime = cloudData.timestamp || "0";
+        const localTime = localStorage.getItem("bdt_last_modified") || "0";
+        const cloud = await loadFromGitHub();
+        if (cloud && cloud.transactions) {
+            const cloudTime = cloud.timestamp || "0";
             if (new Date(cloudTime) > new Date(localTime)) {
-                transactions = cloudData.transactions;
+                transactions = cloud.transactions;
                 localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
                 localStorage.setItem("bdt_last_modified", cloudTime);
-                syncStatus.innerHTML = "☁️ Restored from cloud";
+                statusDiv.innerHTML = "☁️ restored";
                 renderAll();
-            } else if (new Date(localTime) > new Date(cloudTime) && localTransactions) {
-                const saved = await saveToGitHub(transactions);
-                if (saved) {
-                    localStorage.setItem("bdt_last_modified", new Date().toISOString());
-                    syncStatus.innerHTML = "📤 Synced to cloud";
-                }
-            } else {
-                syncStatus.innerHTML = "✅ In sync";
-            }
-        } else if (localTransactions) {
-            const saved = await saveToGitHub(transactions);
-            if (saved) {
-                localStorage.setItem("bdt_last_modified", new Date().toISOString());
-                syncStatus.innerHTML = "📤 Backed up";
-            }
-        }
-        
-        updateLastModifiedDisplay();
-        
-        setTimeout(() => {
-            if (localStorage.getItem("github_token")) {
-                syncStatus.innerHTML = "☁️ Auto-sync ON";
-            } else {
-                syncStatus.innerHTML = "💾 Local mode";
-            }
-        }, 2000);
+            } else if (new Date(localTime) > new Date(cloudTime) && localData) {
+                if (await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified", new Date().toISOString());
+                statusDiv.innerHTML = "📤 backed up";
+            } else statusDiv.innerHTML = "✓ synced";
+        } else if (localData) {
+            if (await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified", new Date().toISOString());
+            statusDiv.innerHTML = "📤 cloud saved";
+        } else statusDiv.innerHTML = "💾 local";
+        updateLastModifiedUI();
+        setTimeout(() => statusDiv.innerHTML = localStorage.getItem("github_token") ? "☁️ auto‑sync" : "💾 local", 2000);
     }
-    
-    async function forceSync() {
-        const token = localStorage.getItem("github_token");
-        if (!token) {
-            const newToken = prompt("Enter GitHub Token (repo scope):\nhttps://github.com/settings/tokens");
-            if (newToken) {
-                localStorage.setItem("github_token", newToken);
-                await smartSync();
-            }
-        } else {
-            await smartSync();
-        }
-    }
-    
+
+    // local data
     function loadFromLocal() {
         const stored = localStorage.getItem("bdt_money_manager");
-        if (stored) {
-            transactions = JSON.parse(stored);
-        } else {
+        if (stored) transactions = JSON.parse(stored);
+        else {
             const today = new Date().toISOString().slice(0,10);
             transactions = [
                 { id: Date.now()+1, type: "income", category: "Office", subCategory: "Salary", amount: 55000, locationOrMethod: "Bank", date: today },
                 { id: Date.now()+2, type: "expense", category: "Food", subCategory: "Restaurant", amount: 1200, locationOrMethod: "Cash", date: today },
-                { id: Date.now()+3, type: "expense", category: "Bills", subCategory: "Electricity Bill", amount: 850, locationOrMethod: "Bank", date: today }
+                { id: Date.now()+3, type: "income", category: "DPS", subCategory: "Monthly Deposit", amount: 5000, locationOrMethod: "Bank", date: today }
             ];
             localStorage.setItem("bdt_last_modified", new Date().toISOString());
         }
-        updateLastModifiedDisplay();
+        updateLastModifiedUI();
     }
-    
-    async function saveToLocal() {
+    async function persistLocal() {
         localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
         localStorage.setItem("bdt_last_modified", new Date().toISOString());
-        updateLastModifiedDisplay();
-        updateStats();
-        
-        const token = localStorage.getItem("github_token");
-        if (token) {
-            await saveToGitHub(transactions);
-        }
+        updateLastModifiedUI();
+        updateStatsUI();
+        if (localStorage.getItem("github_token")) await saveToGitHub(transactions);
     }
-    
-    function exportData() {
-        const dataStr = JSON.stringify({ transactions, lastModified: new Date().toISOString() }, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `bdt_backup_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-    
-    function importData() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "application/json";
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    const imported = JSON.parse(ev.target.result);
-                    if (imported.transactions) {
-                        transactions = imported.transactions;
-                    } else {
-                        transactions = imported;
-                    }
-                    await saveToLocal();
-                    renderAll();
-                    alert("✅ Import successful!");
-                } catch(err) { alert("Invalid file"); }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    }
-    
+
     // CRUD operations
     function addIncome() {
         let amount = parseFloat(document.getElementById("incomeAmount").value);
-        if (isNaN(amount) || amount <= 0) { alert("Enter valid amount"); return; }
+        if (isNaN(amount) || amount <= 0) return;
         transactions.push({
-            id: Date.now(), type: "income",
-            category: document.getElementById("incomeCategory").value,
-            subCategory: document.getElementById("incomeSubCat").value,
-            amount: amount,
+            id: Date.now(), type: "income", category: document.getElementById("incomeCategory").value,
+            subCategory: document.getElementById("incomeSubCat").value, amount,
             locationOrMethod: document.getElementById("incomeLocation").value,
             date: document.getElementById("incomeDate").value || new Date().toISOString().slice(0,10)
         });
-        saveToLocal(); renderAll();
+        persistLocal(); renderAll();
         document.getElementById("incomeAmount").value = "";
-        document.getElementById("incomeCategory").value = "";
-        document.getElementById("incomeSubCat").innerHTML = '<option value="">▼ Select Sub-Category</option>';
-        validateIncomeForm();
+        document.getElementById("incomeCategory").value = ""; updateIncomeSubCat(); checkIncomeValid();
     }
-    
     function addExpense() {
         let amount = parseFloat(document.getElementById("expenseAmount").value);
-        if (isNaN(amount) || amount <= 0) { alert("Enter valid amount"); return; }
+        if (isNaN(amount) || amount <= 0) return;
         transactions.push({
-            id: Date.now(), type: "expense",
-            category: document.getElementById("expenseCategory").value,
-            subCategory: document.getElementById("expenseSubCat").value,
-            amount: amount,
+            id: Date.now(), type: "expense", category: document.getElementById("expenseCategory").value,
+            subCategory: document.getElementById("expenseSubCat").value, amount,
             locationOrMethod: document.getElementById("expenseMethod").value,
             date: document.getElementById("expenseDate").value || new Date().toISOString().slice(0,10)
         });
-        saveToLocal(); renderAll();
+        persistLocal(); renderAll();
         document.getElementById("expenseAmount").value = "";
-        document.getElementById("expenseCategory").value = "";
-        document.getElementById("expenseSubCat").innerHTML = '<option value="">▼ Select Sub-Category</option>';
-        validateExpenseForm();
+        document.getElementById("expenseCategory").value = ""; updateExpenseSubCat(); checkExpenseValid();
     }
-    
-    function deleteTransaction(id) {
-        if (confirm("Delete this transaction?")) {
-            transactions = transactions.filter(t => t.id !== id);
-            saveToLocal(); renderAll();
-        }
-    }
-    
+    function deleteTransaction(id) { if(confirm("Remove transaction?")) { transactions = transactions.filter(t=>t.id!==id); persistLocal(); renderAll(); } }
     function startEdit(id) { editModeId = id; renderAll(); }
-    
     function saveEdit(id) {
-        const newAmount = parseFloat(document.getElementById(`edit_amount_${id}`)?.value);
-        if (isNaN(newAmount) || newAmount <= 0) { alert("Valid amount"); return; }
-        const txn = transactions.find(t => t.id === id);
-        if (txn) {
-            txn.amount = newAmount;
+        let newAmt = parseFloat(document.getElementById(`edit_amount_${id}`)?.value);
+        if (isNaN(newAmt) || newAmt <= 0) return;
+        let txn = transactions.find(t=>t.id===id);
+        if(txn) {
+            txn.amount = newAmt;
             txn.date = document.getElementById(`edit_date_${id}`)?.value || txn.date;
             editModeId = null;
-            saveToLocal(); renderAll();
+            persistLocal(); renderAll();
         }
     }
-    
     function cancelEdit() { editModeId = null; renderAll(); }
-    
-    // Period filtering
-    function getStartOfWeek(date) {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = (day >= 5) ? (day - 5) : (day + 2);
-        d.setDate(d.getDate() - diff);
-        d.setHours(0, 0, 0, 0);
-        return d;
-    }
-    
+
+    // Period & chart
+    function getStartOfWeek(date) { let d=new Date(date); let day=d.getDay(); let diff=(day>=5)?(day-5):(day+2); d.setDate(d.getDate()-diff); d.setHours(0,0,0,0); return d; }
     function getFilteredByPeriod(period) {
-        const now = new Date();
-        let start, end;
-        
-        if (period === "daily") {
-            start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            end = new Date(start.getTime() + 86400000);
-        } else if (period === "weekly") {
-            start = getStartOfWeek(now);
-            end = new Date(start);
-            end.setDate(start.getDate() + 7);
-        } else if (period === "monthly") {
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        } else {
-            start = new Date(now.getFullYear(), 0, 1);
-            end = new Date(now.getFullYear() + 1, 0, 1);
-        }
-        
-        return transactions.filter(t => {
-            let d = new Date(t.date);
-            return d >= start && d < end;
-        });
+        let now=new Date(), start,end;
+        if(period==="daily") { start=new Date(now.getFullYear(),now.getMonth(),now.getDate()); end=new Date(start.getTime()+86400000); }
+        else if(period==="weekly") { start=getStartOfWeek(now); end=new Date(start); end.setDate(start.getDate()+7); }
+        else if(period==="monthly") { start=new Date(now.getFullYear(),now.getMonth(),1); end=new Date(now.getFullYear(),now.getMonth()+1,1); }
+        else { start=new Date(now.getFullYear(),0,1); end=new Date(now.getFullYear()+1,0,1); }
+        return transactions.filter(t=>{ let d=new Date(t.date); return d>=start && d<end; });
     }
-    
+
     function updateBarChart(period) {
         const filtered = getFilteredByPeriod(period);
-        
-        if (period === "daily") {
-            let totalIncome = 0, totalExpense = 0;
-            filtered.forEach(t => {
-                if (t.type === "income") totalIncome += t.amount;
-                else totalExpense += t.amount;
+        if(period==="daily") {
+            let inc=0, exp=0; filtered.forEach(t=> t.type==="income"? inc+=t.amount: exp+=t.amount);
+            drawBar([inc], [exp], ["Today"]);
+            document.getElementById("periodIncome").innerText = inc.toLocaleString();
+            document.getElementById("periodExpense").innerText = exp.toLocaleString();
+            document.getElementById("periodSavings").innerText = (inc-exp).toLocaleString();
+        } else if(period==="weekly") {
+            let start=getStartOfWeek(new Date()), days=["Fri","Sat","Sun","Mon","Tue","Wed","Thu"];
+            let incArr=Array(7).fill(0), expArr=Array(7).fill(0);
+            filtered.forEach(t=>{
+                let diff=Math.floor((new Date(t.date)-start)/(86400000));
+                if(diff>=0 && diff<7) t.type==="income"? incArr[diff]+=t.amount: expArr[diff]+=t.amount;
             });
-            
-            const ctx = document.getElementById('barChart').getContext('2d');
-            if (barChart) barChart.destroy();
-            
-            barChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Today'],
-                    datasets: [
-                        { label: 'Income', data: [totalIncome], backgroundColor: '#10b981', borderRadius: 8 },
-                        { label: 'Expense', data: [totalExpense], backgroundColor: '#ef4444', borderRadius: 8 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
-                }
+            drawBar(incArr, expArr, days);
+            let totalInc=incArr.reduce((a,b)=>a+b,0), totalExp=expArr.reduce((a,b)=>a+b,0);
+            document.getElementById("periodIncome").innerText = totalInc.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExp.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalInc-totalExp).toLocaleString();
+        } else if(period==="monthly") {
+            let daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
+            let incArr=Array(daysInMonth).fill(0), expArr=Array(daysInMonth).fill(0);
+            filtered.forEach(t=>{
+                let day=new Date(t.date).getDate()-1;
+                if(day>=0) t.type==="income"? incArr[day]+=t.amount: expArr[day]+=t.amount;
             });
-            
-            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
-            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
-            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
-            
-        } else if (period === "weekly") {
-            const now = new Date();
-            const weekStart = getStartOfWeek(now);
-            const days = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
-            const dailyIncome = new Array(7).fill(0);
-            const dailyExpense = new Array(7).fill(0);
-            
-            filtered.forEach(t => {
-                const tDate = new Date(t.date);
-                const dayDiff = Math.floor((tDate - weekStart) / (1000 * 60 * 60 * 24));
-                if (dayDiff >= 0 && dayDiff < 7) {
-                    if (t.type === "income") dailyIncome[dayDiff] += t.amount;
-                    else dailyExpense[dayDiff] += t.amount;
-                }
-            });
-            
-            const ctx = document.getElementById('barChart').getContext('2d');
-            if (barChart) barChart.destroy();
-            
-            barChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: days,
-                    datasets: [
-                        { label: 'Income', data: dailyIncome, backgroundColor: '#10b981', borderRadius: 8 },
-                        { label: 'Expense', data: dailyExpense, backgroundColor: '#ef4444', borderRadius: 8 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
-                }
-            });
-            
-            const totalIncome = dailyIncome.reduce((a,b) => a + b, 0);
-            const totalExpense = dailyExpense.reduce((a,b) => a + b, 0);
-            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
-            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
-            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
-            
-        } else if (period === "monthly") {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const dailyIncome = new Array(daysInMonth).fill(0);
-            const dailyExpense = new Array(daysInMonth).fill(0);
-            
-            filtered.forEach(t => {
-                const tDate = new Date(t.date);
-                if (tDate.getFullYear() === year && tDate.getMonth() === month) {
-                    const dayIndex = tDate.getDate() - 1;
-                    if (t.type === "income") dailyIncome[dayIndex] += t.amount;
-                    else dailyExpense[dayIndex] += t.amount;
-                }
-            });
-            
-            const labels = [];
-            for (let i = 0; i < daysInMonth; i++) {
-                if (i % 3 === 0 || i === daysInMonth - 1) labels.push(`${i+1}`);
-                else labels.push('');
-            }
-            
-            const ctx = document.getElementById('barChart').getContext('2d');
-            if (barChart) barChart.destroy();
-            
-            barChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Income', data: dailyIncome, backgroundColor: '#10b981', borderRadius: 8, barPercentage: 0.7 },
-                        { label: 'Expense', data: dailyExpense, backgroundColor: '#ef4444', borderRadius: 8, barPercentage: 0.7 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
-                }
-            });
-            
-            const totalIncome = dailyIncome.reduce((a,b) => a + b, 0);
-            const totalExpense = dailyExpense.reduce((a,b) => a + b, 0);
-            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
-            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
-            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
-            
-        } else if (period === "yearly") {
-            const monthlyIncome = new Array(12).fill(0);
-            const monthlyExpense = new Array(12).fill(0);
-            
-            filtered.forEach(t => {
-                const month = new Date(t.date).getMonth();
-                if (t.type === "income") monthlyIncome[month] += t.amount;
-                else monthlyExpense[month] += t.amount;
-            });
-            
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            
-            const ctx = document.getElementById('barChart').getContext('2d');
-            if (barChart) barChart.destroy();
-            
-            barChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [
-                        { label: 'Income', data: monthlyIncome, backgroundColor: '#10b981', borderRadius: 8, barPercentage: 0.7 },
-                        { label: 'Expense', data: monthlyExpense, backgroundColor: '#ef4444', borderRadius: 8, barPercentage: 0.7 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value.toLocaleString() + ' ৳' } } }
-                }
-            });
-            
-            const totalIncome = monthlyIncome.reduce((a,b) => a + b, 0);
-            const totalExpense = monthlyExpense.reduce((a,b) => a + b, 0);
-            document.getElementById("periodIncome").innerText = totalIncome.toLocaleString();
-            document.getElementById("periodExpense").innerText = totalExpense.toLocaleString();
-            document.getElementById("periodSavings").innerText = (totalIncome - totalExpense).toLocaleString();
+            let labels = daysInMonth>25 ? Array.from({length:daysInMonth},(_,i)=> i%3===0? (i+1).toString() : "") : Array.from({length:daysInMonth},(_,i)=>(i+1).toString());
+            drawBar(incArr, expArr, labels);
+            let totalInc=incArr.reduce((a,b)=>a+b,0), totalExp=expArr.reduce((a,b)=>a+b,0);
+            document.getElementById("periodIncome").innerText = totalInc.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExp.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalInc-totalExp).toLocaleString();
+        } else { // yearly
+            let monthlyInc=Array(12).fill(0), monthlyExp=Array(12).fill(0);
+            filtered.forEach(t=>{ let m=new Date(t.date).getMonth(); t.type==="income"? monthlyInc[m]+=t.amount: monthlyExp[m]+=t.amount; });
+            drawBar(monthlyInc, monthlyExp, ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]);
+            let totalInc=monthlyInc.reduce((a,b)=>a+b,0), totalExp=monthlyExp.reduce((a,b)=>a+b,0);
+            document.getElementById("periodIncome").innerText = totalInc.toLocaleString();
+            document.getElementById("periodExpense").innerText = totalExp.toLocaleString();
+            document.getElementById("periodSavings").innerText = (totalInc-totalExp).toLocaleString();
         }
     }
-    
-    function renderTable(period) {
-        const filtered = getFilteredByPeriod(period);
-        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    function drawBar(incData, expData, labels) {
+        const ctx = document.getElementById('barChart').getContext('2d');
+        if(barChart) barChart.destroy();
+        barChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [
+                { label: 'Income', data: incData, backgroundColor: '#34c759', borderRadius: 12, barPercentage: 0.7 },
+                { label: 'Expense', data: expData, backgroundColor: '#ff3b30', borderRadius: 12, barPercentage: 0.7 }
+            ] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString()+' ৳' } } } }
+        });
+    }
+
+    function renderTransactionTable(period) {
+        let filtered = getFilteredByPeriod(period);
+        filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
         const tbody = document.getElementById("transactionList");
         tbody.innerHTML = "";
-        
         filtered.forEach(t => {
-            const editing = editModeId === t.id;
-            const row = tbody.insertRow();
-            row.className = t.type === "income" ? "income-row" : "expense-row";
-            
-            if (editing) {
-                row.insertCell(0).innerHTML = `<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:100px">`;
-                row.insertCell(1).innerHTML = t.type === "income" ? "Income" : "Expense";
+            let editing = (editModeId === t.id);
+            let row = tbody.insertRow();
+            row.className = t.type==="income"?"income-row":"expense-row";
+            if(editing) {
+                row.insertCell(0).innerHTML = `<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:88px; font-size:0.7rem;">`;
+                row.insertCell(1).innerHTML = t.type==="income"?"📈":"📉";
                 row.insertCell(2).innerHTML = t.category;
                 row.insertCell(3).innerHTML = t.subCategory;
-                row.insertCell(4).innerHTML = `<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:90px">`;
-                row.insertCell(5).innerHTML = `<button class="action-btn save-btn" onclick="saveEdit(${t.id})">Save</button><button class="action-btn cancel-btn" onclick="cancelEdit()">Cancel</button>`;
+                row.insertCell(4).innerHTML = `<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:85px">`;
+                row.insertCell(5).innerHTML = `<button class="mini-btn save-mini" onclick="saveEdit(${t.id})">Save</button><button class="mini-btn cancel-mini" onclick="cancelEdit()">Cancel</button>`;
             } else {
                 row.insertCell(0).innerText = t.date;
-                row.insertCell(1).innerText = t.type === "income" ? "📈 Income" : "📉 Expense";
+                row.insertCell(1).innerText = t.type==="income"?"📈 Income":"📉 Expense";
                 row.insertCell(2).innerText = t.category;
                 row.insertCell(3).innerText = t.subCategory;
-                row.insertCell(4).innerText = t.amount.toLocaleString() + " ৳";
-                row.insertCell(5).innerHTML = `<button class="action-btn edit-btn" onclick="startEdit(${t.id})">Edit</button><button class="action-btn delete-btn" onclick="deleteTransaction(${t.id})">Del</button>`;
+                row.insertCell(4).innerText = t.amount.toLocaleString()+" ৳";
+                row.insertCell(5).innerHTML = `<button class="mini-btn edit-mini" onclick="startEdit(${t.id})">Edit</button><button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`;
             }
         });
         updateBarChart(period);
     }
-    
-    function updateStats() {
-        let totalInc = 0, totalExp = 0, bank = 0, cash = 0;
-        transactions.forEach(t => {
-            if (t.type === "income") {
-                totalInc += t.amount;
-                if (t.locationOrMethod === "Bank") bank += t.amount;
-                else cash += t.amount;
-            } else {
-                totalExp += t.amount;
-                if (t.locationOrMethod === "Bank") bank -= t.amount;
-                else cash -= t.amount;
-            }
+
+    function updateStatsUI() {
+        let totalInc=0, totalExp=0, bank=0, cash=0;
+        transactions.forEach(t=>{
+            if(t.type==="income") { totalInc+=t.amount; if(t.locationOrMethod==="Bank") bank+=t.amount; else cash+=t.amount; }
+            else { totalExp+=t.amount; if(t.locationOrMethod==="Bank") bank-=t.amount; else cash-=t.amount; }
         });
         document.getElementById("totalIncomeSum").innerText = totalInc.toLocaleString();
         document.getElementById("totalExpenseSum").innerText = totalExp.toLocaleString();
         document.getElementById("bankTotal").innerText = bank.toLocaleString();
         document.getElementById("cashTotal").innerText = cash.toLocaleString();
-        document.getElementById("totalBalance").innerText = (totalInc - totalExp).toLocaleString();
-        document.getElementById("savingsAmount").innerHTML = (totalInc - totalExp).toLocaleString() + " ৳";
+        document.getElementById("totalBalance").innerText = (totalInc-totalExp).toLocaleString();
+        document.getElementById("savingsAmount").innerHTML = (totalInc-totalExp).toLocaleString() + " ৳";
     }
-    
-    function setActivePeriod(period) {
+
+    function setPeriod(period) {
         currentPeriod = period;
-        document.querySelectorAll(".filter-btn").forEach(btn => {
-            if (btn.getAttribute("data-period") === period) btn.classList.add("active");
+        document.querySelectorAll(".segment-btn").forEach(btn=>{
+            if(btn.getAttribute("data-period")===period) btn.classList.add("active");
             else btn.classList.remove("active");
         });
-        renderTable(currentPeriod);
+        renderTransactionTable(currentPeriod);
     }
-    
-    function renderAll() { updateStats(); renderTable(currentPeriod); }
-    
-    // Initialize
+    function renderAll() { updateStatsUI(); renderTransactionTable(currentPeriod); }
+
+    // event binding
     document.addEventListener("DOMContentLoaded", async () => {
         loadFromLocal();
-        const today = new Date().toISOString().slice(0, 10);
-        if (!document.getElementById("incomeDate").value) document.getElementById("incomeDate").value = today;
-        if (!document.getElementById("expenseDate").value) document.getElementById("expenseDate").value = today;
-        
-        updateIncomeSubCat();
-        updateExpenseSubCat();
-        
-        document.getElementById("incomeCategory").addEventListener("change", updateIncomeSubCat);
-        document.getElementById("expenseCategory").addEventListener("change", updateExpenseSubCat);
-        
-        // Add validation listeners
-        document.getElementById("incomeCategory").addEventListener("change", validateIncomeForm);
-        document.getElementById("incomeSubCat").addEventListener("change", validateIncomeForm);
-        document.getElementById("incomeAmount").addEventListener("input", validateIncomeForm);
-        document.getElementById("incomeDate").addEventListener("change", validateIncomeForm);
-        
-        document.getElementById("expenseCategory").addEventListener("change", validateExpenseForm);
-        document.getElementById("expenseSubCat").addEventListener("change", validateExpenseForm);
-        document.getElementById("expenseAmount").addEventListener("input", validateExpenseForm);
-        document.getElementById("expenseDate").addEventListener("change", validateExpenseForm);
-        
+        let today = new Date().toISOString().slice(0,10);
+        if(!document.getElementById("incomeDate").value) document.getElementById("incomeDate").value = today;
+        if(!document.getElementById("expenseDate").value) document.getElementById("expenseDate").value = today;
+        updateIncomeSubCat(); updateExpenseSubCat();
+        document.getElementById("incomeCategory").addEventListener("change", () => { updateIncomeSubCat(); checkIncomeValid(); });
+        document.getElementById("incomeSubCat").addEventListener("change", checkIncomeValid);
+        document.getElementById("incomeAmount").addEventListener("input", checkIncomeValid);
+        document.getElementById("incomeDate").addEventListener("change", checkIncomeValid);
+        document.getElementById("expenseCategory").addEventListener("change", () => { updateExpenseSubCat(); checkExpenseValid(); });
+        document.getElementById("expenseSubCat").addEventListener("change", checkExpenseValid);
+        document.getElementById("expenseAmount").addEventListener("input", checkExpenseValid);
+        document.getElementById("expenseDate").addEventListener("change", checkExpenseValid);
         document.getElementById("addIncomeBtn").addEventListener("click", addIncome);
         document.getElementById("addExpenseBtn").addEventListener("click", addExpense);
-        document.querySelectorAll(".filter-btn").forEach(btn => btn.addEventListener("click", () => setActivePeriod(btn.getAttribute("data-period"))));
-        document.getElementById("forceSyncBtn").addEventListener("click", forceSync);
-        document.getElementById("exportBtn").addEventListener("click", exportData);
-        document.getElementById("importBtn").addEventListener("click", importData);
-        
+        document.querySelectorAll(".segment-btn").forEach(btn=>btn.addEventListener("click",()=>setPeriod(btn.getAttribute("data-period"))));
+        document.getElementById("forceSyncBtn").addEventListener("click", syncWithCloud);
+        document.getElementById("exportBtn").addEventListener("click", ()=>{
+            let dataStr = JSON.stringify(transactions,null,2);
+            let blob = new Blob([dataStr],{type:"application/json"});
+            let a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`bdt_backup_${today}.json`; a.click(); URL.revokeObjectURL(blob);
+        });
+        document.getElementById("importBtn").addEventListener("click", ()=>{
+            let inp = document.createElement("input"); inp.type="file"; inp.accept="application/json";
+            inp.onchange = e=>{ let f=e.target.files[0]; if(!f) return; let rd=new FileReader(); rd.onload=async ev=>{ try{ let imp=JSON.parse(ev.target.result); transactions=Array.isArray(imp)?imp:imp.transactions || []; await persistLocal(); renderAll(); alert("✓ imported"); }catch(e){ alert("invalid file"); } }; rd.readAsText(f); };
+            inp.click();
+        });
+        checkIncomeValid(); checkExpenseValid();
         renderAll();
-        await smartSync();
+        await syncWithCloud();
     });
 </script>
 </body>
 </html>
+```
