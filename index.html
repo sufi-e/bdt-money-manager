@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BDT Wallet — Bank & Cash Balance</title>
+    <title>BDT Wallet — Bank & Cash Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -46,10 +46,13 @@
         .report-panel { flex: 2; min-width: 260px; background: #ffffff; border-radius: 36px; box-shadow: 0 4px 14px rgba(0,0,0,0.02), 0 0 0 1px rgba(0,0,0,0.02); overflow: hidden; }
         .chart-panel { flex: 1.5; min-width: 260px; background: #ffffff; border-radius: 36px; padding: 20px 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.02), 0 0 0 1px rgba(0,0,0,0.02); }
         @media (max-width: 800px) { .report-chart-flex { flex-direction: column; } }
-        .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 20px 20px 8px 20px; }
-        .segment { display: flex; gap: 8px; background: #f2f2f7; border-radius: 60px; padding: 4px; }
+        .filter-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 20px 20px 8px 20px; gap: 12px; }
+        .segment { display: flex; gap: 8px; background: #f2f2f7; border-radius: 60px; padding: 4px; flex-wrap: wrap; }
         .segment-btn { background: transparent; border: none; padding: 8px 18px; border-radius: 40px; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
         .segment-btn.active { background: #ffffff; color: #007aff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .type-filter { display: flex; gap: 8px; background: #f2f2f7; border-radius: 60px; padding: 4px; }
+        .type-btn { background: transparent; border: none; padding: 6px 16px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; cursor: pointer; }
+        .type-btn.active-type { background: #ffffff; color: #007aff; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .table-wrap { overflow-x: auto; padding: 0 16px 20px 16px; }
         .transaction-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
         .transaction-table th { text-align: left; padding: 14px 6px; color: #6c6c70; font-weight: 510; border-bottom: 0.5px solid #e9ecef; }
@@ -63,6 +66,11 @@
         .cancel-mini { background: #e9e9ef; color: #8e8e93; }
         .period-stats { display: flex; justify-content: center; gap: 16px; margin: 12px 20px 20px; flex-wrap: wrap; }
         canvas { max-height: 330px; width: 100% !important; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin: 20px 20px 20px; padding-top: 8px; border-top: 0.5px solid #e9ecef; }
+        .page-btn { background: #f2f2f7; border: none; padding: 8px 16px; border-radius: 32px; font-weight: 500; font-size: 0.8rem; cursor: pointer; transition: all 0.1s; }
+        .page-btn:active { transform: scale(0.96); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .page-info { font-size: 0.75rem; font-weight: 500; color: #1c1c1e; background: #f8f8fc; padding: 6px 16px; border-radius: 30px; }
         .footer-note { font-size: 0.65rem; text-align: center; color: #8e8e93; border-top: 0.5px solid #e9ecef; margin-top: 32px; padding-top: 20px; }
         @media (max-width: 700px) {
             body { padding: 12px; }
@@ -80,7 +88,6 @@
 <body>
 <div class="app-container">
     <div class="container-inner">
-        <!-- header -->
         <div class="header-row">
             <div class="title-section">
                 <h1>💰 BDT Wallet</h1>
@@ -98,7 +105,6 @@
             <div class="balance-pill">💰 Total: <span id="totalBalance">0</span> ৳</div>
         </div>
 
-        <!-- Bank & Cash balance cards -->
         <div class="money-split">
             <div class="bank-card">
                 <div class="money-label">🏦 Bank Account</div>
@@ -112,91 +118,57 @@
             </div>
         </div>
 
-        <!-- forms -->
         <div class="two-col">
             <div class="card">
                 <div class="card-title income-title">📈 Add Income</div>
                 <div class="form-stack">
-                    <div class="form-row">
-                        <select id="incomeCategory">
-                            <option value="" disabled selected>Category</option>
-                            <option value="Office">🏢 Office</option>
-                            <option value="Tuition">📚 Tuition</option>
-                            <option value="DPS">🏦 DPS</option>
-                            <option value="FDR">📈 FDR</option>
-                            <option value="Saving">💰 Saving Account</option>
-                            <option value="OtherIncome">📌 Other Income</option>
-                        </select>
-                        <select id="incomeSubCat"><option value="" disabled selected>Sub‑category</option></select>
-                    </div>
-                    <div class="form-row">
-                        <input type="number" id="incomeAmount" placeholder="Amount (BDT)">
-                        <select id="incomeLocation">
-                            <option value="Bank">🏦 Bank</option>
-                            <option value="Cash">💵 Cash</option>
-                        </select>
-                        <input type="date" id="incomeDate">
-                    </div>
+                    <div class="form-row"><select id="incomeCategory"><option value="" disabled selected>Category</option><option value="Office">🏢 Office</option><option value="Tuition">📚 Tuition</option><option value="DPS">🏦 DPS</option><option value="FDR">📈 FDR</option><option value="Saving">💰 Saving Account</option><option value="OtherIncome">📌 Other Income</option></select>
+                    <select id="incomeSubCat"><option value="" disabled selected>Sub‑category</option></select></div>
+                    <div class="form-row"><input type="number" id="incomeAmount" placeholder="Amount (BDT)"><select id="incomeLocation"><option value="Bank">🏦 Bank</option><option value="Cash">💵 Cash</option></select><input type="date" id="incomeDate"></div>
                     <button id="addIncomeBtn" class="apple-btn">➕ Add Income</button>
                 </div>
-                <div class="stats-chips">
-                    <div class="chip">💰 Total Income: <span id="totalIncomeSum">0</span> ৳</div>
-                    <div class="chip">🏦 Bank: <span id="bankTotal">0</span> ৳</div>
-                    <div class="chip">💵 Cash: <span id="cashTotal">0</span> ৳</div>
-                </div>
+                <div class="stats-chips"><div class="chip">💰 Total Income: <span id="totalIncomeSum">0</span> ৳</div><div class="chip">🏦 Bank: <span id="bankTotal">0</span> ৳</div><div class="chip">💵 Cash: <span id="cashTotal">0</span> ৳</div></div>
             </div>
-
             <div class="card">
                 <div class="card-title expense-title">📉 Add Expense</div>
                 <div class="form-stack">
-                    <div class="form-row">
-                        <select id="expenseCategory">
-                            <option value="" disabled selected>Category</option>
-                            <option value="Treatment">🏥 Treatment</option><option value="Bike">🏍️ Bike</option>
-                            <option value="Transport">🚌 Transport</option><option value="Food">🍔 Food</option>
-                            <option value="Education">📖 Education</option><option value="Investment">📈 Investment</option>
-                            <option value="Pocket Money">👝 Pocket Money</option><option value="Furniture">🛋️ Furniture</option>
-                            <option value="Pet">🐾 Pet</option><option value="Household Product">🧴 Household</option>
-                            <option value="Bills">⚡ Bills</option><option value="Clothing">👕 Clothing</option>
-                            <option value="Gadget">📱 Gadget</option><option value="Other">📌 Other</option>
-                        </select>
-                        <select id="expenseSubCat"><option value="" disabled selected>Sub‑category</option></select>
-                    </div>
-                    <div class="form-row">
-                        <input type="number" id="expenseAmount" placeholder="Amount (BDT)">
-                        <select id="expenseMethod">
-                            <option value="Bank">🏦 Bank</option>
-                            <option value="Cash">💵 Cash</option>
-                        </select>
-                        <input type="date" id="expenseDate">
-                    </div>
+                    <div class="form-row"><select id="expenseCategory"><option value="" disabled selected>Category</option><option value="Treatment">🏥 Treatment</option><option value="Bike">🏍️ Bike</option><option value="Transport">🚌 Transport</option><option value="Food">🍔 Food</option><option value="Education">📖 Education</option><option value="Investment">📈 Investment</option><option value="Pocket Money">👝 Pocket Money</option><option value="Furniture">🛋️ Furniture</option><option value="Pet">🐾 Pet</option><option value="Household Product">🧴 Household</option><option value="Bills">⚡ Bills</option><option value="Clothing">👕 Clothing</option><option value="Gadget">📱 Gadget</option><option value="Other">📌 Other</option></select>
+                    <select id="expenseSubCat"><option value="" disabled selected>Sub‑category</option></select></div>
+                    <div class="form-row"><input type="number" id="expenseAmount" placeholder="Amount (BDT)"><select id="expenseMethod"><option value="Bank">🏦 Bank</option><option value="Cash">💵 Cash</option></select><input type="date" id="expenseDate"></div>
                     <button id="addExpenseBtn" class="apple-btn">➖ Add Expense</button>
                 </div>
-                <div class="stats-chips">
-                    <div class="chip">💸 Total Expense: <span id="totalExpenseSum">0</span> ৳</div>
-                </div>
+                <div class="stats-chips"><div class="chip">💸 Total Expense: <span id="totalExpenseSum">0</span> ৳</div></div>
             </div>
         </div>
 
-        <!-- Transactions + chart -->
         <div class="report-chart-flex">
             <div class="report-panel">
                 <div class="filter-bar">
                     <h3 style="font-weight: 590;">📋 Transactions</h3>
-                    <div class="segment">
-                        <button data-period="daily" class="segment-btn">Daily</button>
-                        <button data-period="weekly" class="segment-btn">Weekly</button>
-                        <button data-period="monthly" class="segment-btn">Monthly</button>
-                        <button data-period="yearly" class="segment-btn active">Yearly</button>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <div class="segment">
+                            <button data-period="daily" class="segment-btn">Daily</button>
+                            <button data-period="weekly" class="segment-btn">Weekly</button>
+                            <button data-period="monthly" class="segment-btn">Monthly</button>
+                            <button data-period="yearly" class="segment-btn active">Yearly</button>
+                        </div>
+                        <div class="type-filter" id="typeFilterGroup">
+                            <button data-type="all" class="type-btn active-type">All</button>
+                            <button data-type="income" class="type-btn">📈 Income</button>
+                            <button data-type="expense" class="type-btn">📉 Expense</button>
+                        </div>
                     </div>
                 </div>
                 <div class="table-wrap">
                     <table class="transaction-table">
-                        <thead>
-                            <tr><th>Date</th><th>Type</th><th>Category</th><th>Sub‑category</th><th>Amount</th><th>Actions</th></tr>
-                        </thead>
+                        <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Sub‑category</th><th>Amount</th><th>Actions</th></tr></thead>
                         <tbody id="transactionList"></tbody>
                     </table>
+                </div>
+                <div class="pagination" id="paginationControls">
+                    <button class="page-btn" id="prevPageBtn">← Previous</button>
+                    <span class="page-info" id="pageInfo">Page 1</span>
+                    <button class="page-btn" id="nextPageBtn">Next →</button>
                 </div>
                 <div class="period-stats">
                     <div class="chip">📊 Period Income: <span id="periodIncome">0</span> ৳</div>
@@ -210,7 +182,7 @@
                 <div style="text-align:center; font-size: 0.7rem; margin-top: 12px; color:#8e8e93;">🟢 Income &nbsp; 🔴 Expense</div>
             </div>
         </div>
-        <div class="footer-note">✨ Bank & Cash balance update automatically | Cloud sync</div>
+        <div class="footer-note">✨ Bank & Cash balance auto-update | 10 transactions per page | Categorical filters</div>
     </div>
 </div>
 
@@ -219,311 +191,61 @@
     const GITHUB_REPO = "bdt-money-manager";
     let transactions = [];
     let currentPeriod = "yearly";
+    let currentTypeFilter = "all";
     let editModeId = null;
     let barChart = null;
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
 
-    const incomeSubMap = {
-        "Office": ["Salary","Bonus","Gift"],
-        "Tuition": ["Coaching","Student"],
-        "DPS": ["Monthly Deposit","Interest","Matured"],
-        "FDR": ["Interest","Renewal","Matured"],
-        "Saving": ["Interest","Deposit","Withdrawal"],
-        "OtherIncome": ["Dividend","Gift","Refund","Misc"]
-    };
+    const incomeSubMap = { "Office": ["Salary","Bonus","Gift"], "Tuition": ["Coaching","Student"], "DPS": ["Monthly Deposit","Interest","Matured"], "FDR": ["Interest","Renewal","Matured"], "Saving": ["Interest","Deposit","Withdrawal"], "OtherIncome": ["Dividend","Gift","Refund","Misc"] };
+    const expenseSubMap = { "Treatment": ["Medicine","Medical","Medical Equipment"], "Bike": ["Fuel","Engine Oil","Servicing"], "Transport": ["Bus","Train","CNG","Uber","Other"], "Food": ["For Home","Restaurant","Others"], "Education": ["Tuition Fee","Books","Stationery","Course Fee"], "Investment": ["DPS","FDR","Life Insurance"], "Pocket Money": ["Mother","Father","Wife","Other"], "Furniture": ["Sofa","Table","Bed","Chair","Almirah","Other"], "Pet": ["Food","Litter","Medicine","Other"], "Household Product": ["Cleaning","Kitchen","Bathroom","Laundry","Other"], "Bills": ["Internet Bill","Electricity Bill","Gas Bill","Water Bill","Mobile Bill","Others"], "Clothing": ["Myself","Others"], "Gadget": ["Phone","Laptop","Tablet","Headphone","Accessories","Other"], "Other": ["Miscellaneous"] };
 
-    const expenseSubMap = {
-        "Treatment": ["Medicine","Medical","Medical Equipment"],
-        "Bike": ["Fuel","Engine Oil","Servicing"],
-        "Transport": ["Bus","Train","CNG","Uber","Other"],
-        "Food": ["For Home","Restaurant","Others"],
-        "Education": ["Tuition Fee","Books","Stationery","Course Fee"],
-        "Investment": ["DPS","FDR","Life Insurance"],
-        "Pocket Money": ["Mother","Father","Wife","Other"],
-        "Furniture": ["Sofa","Table","Bed","Chair","Almirah","Other"],
-        "Pet": ["Food","Litter","Medicine","Other"],
-        "Household Product": ["Cleaning","Kitchen","Bathroom","Laundry","Other"],
-        "Bills": ["Internet Bill","Electricity Bill","Gas Bill","Water Bill","Mobile Bill","Others"],
-        "Clothing": ["Myself","Others"],
-        "Gadget": ["Phone","Laptop","Tablet","Headphone","Accessories","Other"],
-        "Other": ["Miscellaneous"]
-    };
+    function updateIncomeSubCat() { const main=document.getElementById("incomeCategory").value; const sub=document.getElementById("incomeSubCat"); sub.innerHTML='<option value="" disabled selected>Sub‑category</option>'; if(main&&incomeSubMap[main]) incomeSubMap[main].forEach(opt=>{let o=document.createElement("option"); o.value=opt; o.textContent=opt; sub.appendChild(o);}); }
+    function updateExpenseSubCat() { const main=document.getElementById("expenseCategory").value; const sub=document.getElementById("expenseSubCat"); sub.innerHTML='<option value="" disabled selected>Sub‑category</option>'; if(main&&expenseSubMap[main]) expenseSubMap[main].forEach(opt=>{let o=document.createElement("option"); o.value=opt; o.textContent=opt; sub.appendChild(o);}); }
+    function checkIncomeValid() { const cat=document.getElementById("incomeCategory").value,sub=document.getElementById("incomeSubCat").value,amt=parseFloat(document.getElementById("incomeAmount").value),date=document.getElementById("incomeDate").value; document.getElementById("addIncomeBtn").disabled = !(cat && sub && amt>0 && date); }
+    function checkExpenseValid() { const cat=document.getElementById("expenseCategory").value,sub=document.getElementById("expenseSubCat").value,amt=parseFloat(document.getElementById("expenseAmount").value),date=document.getElementById("expenseDate").value; document.getElementById("addExpenseBtn").disabled = !(cat && sub && amt>0 && date); }
 
-    function updateIncomeSubCat() {
-        const main = document.getElementById("incomeCategory").value;
-        const sub = document.getElementById("incomeSubCat");
-        sub.innerHTML = '<option value="" disabled selected>Sub‑category</option>';
-        if (main && incomeSubMap[main]) incomeSubMap[main].forEach(opt => { let o=document.createElement("option"); o.value=opt; o.textContent=opt; sub.appendChild(o); });
-    }
+    function calculateBankCashBalance() { let bank=0,cash=0; transactions.forEach(t=>{if(t.type==="income"){if(t.locationOrMethod==="Bank") bank+=t.amount; else if(t.locationOrMethod==="Cash") cash+=t.amount;}else{if(t.locationOrMethod==="Bank") bank-=t.amount; else cash-=t.amount;}}); return {bankBalance:bank, cashBalance:cash}; }
+    function updateBankCashUI() { const {bankBalance,cashBalance}=calculateBankCashBalance(); document.getElementById("bankAmount").innerText=bankBalance.toLocaleString(); document.getElementById("cashAmount").innerText=cashBalance.toLocaleString(); }
+    function updateStatsUI() { let totalInc=0,totalExp=0,bankTotal=0,cashTotal=0; transactions.forEach(t=>{if(t.type==="income"){totalInc+=t.amount; if(t.locationOrMethod==="Bank") bankTotal+=t.amount; else if(t.locationOrMethod==="Cash") cashTotal+=t.amount;}else totalExp+=t.amount;}); document.getElementById("totalIncomeSum").innerText=totalInc.toLocaleString(); document.getElementById("totalExpenseSum").innerText=totalExp.toLocaleString(); document.getElementById("bankTotal").innerText=bankTotal.toLocaleString(); document.getElementById("cashTotal").innerText=cashTotal.toLocaleString(); document.getElementById("totalBalance").innerText=(totalInc-totalExp).toLocaleString(); updateBankCashUI(); }
 
-    function updateExpenseSubCat() {
-        const main = document.getElementById("expenseCategory").value;
-        const sub = document.getElementById("expenseSubCat");
-        sub.innerHTML = '<option value="" disabled selected>Sub‑category</option>';
-        if (main && expenseSubMap[main]) expenseSubMap[main].forEach(opt => { let o=document.createElement("option"); o.value=opt; o.textContent=opt; sub.appendChild(o); });
-    }
+    function updateLastModifiedUI() { let lm=localStorage.getItem("bdt_last_modified"); if(lm){let d=new Date(lm); document.getElementById("lastModifiedDisplay").innerHTML=`last sync ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;}else document.getElementById("lastModifiedDisplay").innerHTML=`last sync just now`; }
+    async function getGitHubToken() { let token=localStorage.getItem("github_token"); if(!token){let t=prompt("🔐 GitHub token (repo scope) – optional."); if(t) localStorage.setItem("github_token",t);} return localStorage.getItem("github_token"); }
+    async function loadFromGitHub() { const token=await getGitHubToken(); if(!token) return null; try{const res=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{headers:{"Authorization":`token ${token}`}}); if(res.ok){const data=await res.json(); const content=JSON.parse(atob(data.content)); return {transactions:content.transactions,timestamp:content.timestamp};}}catch(e){} return null; }
+    async function saveToGitHub(dataTx) { const token=localStorage.getItem("github_token"); if(!token) return false; const content={transactions:dataTx,timestamp:new Date().toISOString()}; const encoded=btoa(JSON.stringify(content)); let sha=null; try{const getRes=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{headers:{"Authorization":`token ${token}`}}); if(getRes.ok){const d=await getRes.json(); sha=d.sha;}}catch(e){} const body={message:`update ${new Date().toISOString()}`,content:encoded,branch:"main"}; if(sha) body.sha=sha; const resp=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{method:"PUT",headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)}); return resp.ok; }
+    async function syncWithCloud() { const statusDiv=document.getElementById("syncStatus"); statusDiv.innerHTML="⟳ syncing..."; const localData=localStorage.getItem("bdt_money_manager"); const localTime=localStorage.getItem("bdt_last_modified")||"0"; const cloud=await loadFromGitHub(); if(cloud&&cloud.transactions){const cloudTime=cloud.timestamp||"0"; if(new Date(cloudTime)>new Date(localTime)){transactions=cloud.transactions; localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",cloudTime); statusDiv.innerHTML="☁️ restored"; renderAll();}else if(new Date(localTime)>new Date(cloudTime)&&localData){if(await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified",new Date().toISOString()); statusDiv.innerHTML="📤 backed up";}else statusDiv.innerHTML="✓ synced";} else if(localData){if(await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified",new Date().toISOString()); statusDiv.innerHTML="📤 cloud saved";} else statusDiv.innerHTML="💾 local"; updateLastModifiedUI(); setTimeout(()=>statusDiv.innerHTML=localStorage.getItem("github_token")?"☁️ auto‑sync":"💾 local",2000); }
+    function loadFromLocal() { const stored=localStorage.getItem("bdt_money_manager"); if(stored) transactions=JSON.parse(stored); else { const today=new Date().toISOString().slice(0,10); transactions=[{id:Date.now()+1,type:"income",category:"Office",subCategory:"Salary",amount:55000,locationOrMethod:"Bank",date:today},{id:Date.now()+2,type:"expense",category:"Food",subCategory:"Restaurant",amount:1200,locationOrMethod:"Cash",date:today},{id:Date.now()+3,type:"income",category:"DPS",subCategory:"Monthly Deposit",amount:5000,locationOrMethod:"Bank",date:today}]; localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",new Date().toISOString()); } updateLastModifiedUI(); }
+    async function persistLocal() { localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",new Date().toISOString()); updateLastModifiedUI(); updateStatsUI(); if(localStorage.getItem("github_token")) await saveToGitHub(transactions); }
 
-    function checkIncomeValid() {
-        const cat=document.getElementById("incomeCategory").value, sub=document.getElementById("incomeSubCat").value;
-        const amt=parseFloat(document.getElementById("incomeAmount").value), date=document.getElementById("incomeDate").value;
-        document.getElementById("addIncomeBtn").disabled = !(cat && sub && amt > 0 && date);
-    }
-
-    function checkExpenseValid() {
-        const cat=document.getElementById("expenseCategory").value, sub=document.getElementById("expenseSubCat").value;
-        const amt=parseFloat(document.getElementById("expenseAmount").value), date=document.getElementById("expenseDate").value;
-        document.getElementById("addExpenseBtn").disabled = !(cat && sub && amt > 0 && date);
-    }
-
-    function calculateBankCashBalance() {
-        let bankBalance=0, cashBalance=0;
-        transactions.forEach(t => {
-            const method=t.locationOrMethod, amount=t.amount;
-            if (t.type==="income") { if(method==="Bank") bankBalance+=amount; else if(method==="Cash") cashBalance+=amount; }
-            else if (t.type==="expense") { if(method==="Bank") bankBalance-=amount; else if(method==="Cash") cashBalance-=amount; }
-        });
-        return { bankBalance, cashBalance };
-    }
-
-    function updateBankCashUI() {
-        const { bankBalance, cashBalance } = calculateBankCashBalance();
-        document.getElementById("bankAmount").innerText = bankBalance.toLocaleString();
-        document.getElementById("cashAmount").innerText = cashBalance.toLocaleString();
-    }
-
-    function updateStatsUI() {
-        let totalInc=0, totalExp=0, bankTotal=0, cashTotal=0;
-        transactions.forEach(t => {
-            if (t.type==="income") { totalInc+=t.amount; if(t.locationOrMethod==="Bank") bankTotal+=t.amount; else if(t.locationOrMethod==="Cash") cashTotal+=t.amount; }
-            else { totalExp+=t.amount; }
-        });
-        document.getElementById("totalIncomeSum").innerText = totalInc.toLocaleString();
-        document.getElementById("totalExpenseSum").innerText = totalExp.toLocaleString();
-        document.getElementById("bankTotal").innerText = bankTotal.toLocaleString();
-        document.getElementById("cashTotal").innerText = cashTotal.toLocaleString();
-        document.getElementById("totalBalance").innerText = (totalInc-totalExp).toLocaleString();
-        updateBankCashUI();
-    }
-
-    function updateLastModifiedUI() {
-        let lm=localStorage.getItem("bdt_last_modified");
-        if (lm) { let d=new Date(lm); document.getElementById("lastModifiedDisplay").innerHTML=`last sync ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`; }
-        else document.getElementById("lastModifiedDisplay").innerHTML=`last sync just now`;
-    }
-
-    async function getGitHubToken() {
-        let token=localStorage.getItem("github_token");
-        if (!token) { let t=prompt("🔐 GitHub token (repo scope) – optional. Press Cancel to work offline."); if(t) localStorage.setItem("github_token",t); }
-        return localStorage.getItem("github_token");
-    }
-
-    async function loadFromGitHub() {
-        const token=await getGitHubToken(); if(!token) return null;
-        try {
-            const res=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{headers:{"Authorization":`token ${token}`,"Accept":"application/vnd.github.v3+json"}});
-            if(res.ok) { const data=await res.json(); const content=JSON.parse(atob(data.content)); return {transactions:content.transactions,timestamp:content.timestamp}; }
-        } catch(e) {}
-        return null;
-    }
-
-    async function saveToGitHub(dataTx) {
-        const token=localStorage.getItem("github_token"); if(!token) return false;
-        const content={transactions:dataTx,timestamp:new Date().toISOString()};
-        const encoded=btoa(JSON.stringify(content));
-        let sha=null;
-        try { const getRes=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{headers:{"Authorization":`token ${token}`}}); if(getRes.ok) { const d=await getRes.json(); sha=d.sha; } } catch(e) {}
-        const body={message:`update ${new Date().toISOString()}`,content:encoded,branch:"main"};
-        if(sha) body.sha=sha;
-        const resp=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{method:"PUT",headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
-        return resp.ok;
-    }
-
-    async function syncWithCloud() {
-        const statusDiv=document.getElementById("syncStatus");
-        statusDiv.innerHTML="⟳ syncing...";
-        const localData=localStorage.getItem("bdt_money_manager");
-        const localTime=localStorage.getItem("bdt_last_modified")||"0";
-        const cloud=await loadFromGitHub();
-        if(cloud && cloud.transactions) {
-            const cloudTime=cloud.timestamp||"0";
-            if(new Date(cloudTime)>new Date(localTime)) { transactions=cloud.transactions; localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",cloudTime); statusDiv.innerHTML="☁️ restored"; renderAll(); }
-            else if(new Date(localTime)>new Date(cloudTime) && localData) { if(await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified",new Date().toISOString()); statusDiv.innerHTML="📤 backed up"; }
-            else statusDiv.innerHTML="✓ synced";
-        } else if(localData) { if(await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified",new Date().toISOString()); statusDiv.innerHTML="📤 cloud saved"; }
-        else statusDiv.innerHTML="💾 local";
-        updateLastModifiedUI();
-        setTimeout(()=>statusDiv.innerHTML=localStorage.getItem("github_token")?"☁️ auto‑sync":"💾 local",2000);
-    }
-
-    function loadFromLocal() {
-        const stored=localStorage.getItem("bdt_money_manager");
-        if(stored) transactions=JSON.parse(stored);
-        else {
-            const today=new Date().toISOString().slice(0,10);
-            transactions=[
-                {id:Date.now()+1,type:"income",category:"Office",subCategory:"Salary",amount:55000,locationOrMethod:"Bank",date:today},
-                {id:Date.now()+2,type:"expense",category:"Food",subCategory:"Restaurant",amount:1200,locationOrMethod:"Cash",date:today},
-                {id:Date.now()+3,type:"income",category:"DPS",subCategory:"Monthly Deposit",amount:5000,locationOrMethod:"Bank",date:today}
-            ];
-            localStorage.setItem("bdt_last_modified",new Date().toISOString());
-        }
-        updateLastModifiedUI();
-    }
-
-    async function persistLocal() {
-        localStorage.setItem("bdt_money_manager",JSON.stringify(transactions));
-        localStorage.setItem("bdt_last_modified",new Date().toISOString());
-        updateLastModifiedUI(); updateStatsUI();
-        if(localStorage.getItem("github_token")) await saveToGitHub(transactions);
-    }
-
-    function addIncome() {
-        let amount=parseFloat(document.getElementById("incomeAmount").value);
-        if(isNaN(amount)||amount<=0) return;
-        transactions.push({id:Date.now(),type:"income",category:document.getElementById("incomeCategory").value,subCategory:document.getElementById("incomeSubCat").value,amount,locationOrMethod:document.getElementById("incomeLocation").value,date:document.getElementById("incomeDate").value||new Date().toISOString().slice(0,10)});
-        persistLocal(); renderAll();
-        document.getElementById("incomeAmount").value=""; document.getElementById("incomeCategory").value=""; updateIncomeSubCat(); checkIncomeValid();
-    }
-
-    function addExpense() {
-        let amount=parseFloat(document.getElementById("expenseAmount").value);
-        if(isNaN(amount)||amount<=0) return;
-        transactions.push({id:Date.now(),type:"expense",category:document.getElementById("expenseCategory").value,subCategory:document.getElementById("expenseSubCat").value,amount,locationOrMethod:document.getElementById("expenseMethod").value,date:document.getElementById("expenseDate").value||new Date().toISOString().slice(0,10)});
-        persistLocal(); renderAll();
-        document.getElementById("expenseAmount").value=""; document.getElementById("expenseCategory").value=""; updateExpenseSubCat(); checkExpenseValid();
-    }
-
+    function addIncome() { let amount=parseFloat(document.getElementById("incomeAmount").value); if(isNaN(amount)||amount<=0) return; transactions.push({id:Date.now(),type:"income",category:document.getElementById("incomeCategory").value,subCategory:document.getElementById("incomeSubCat").value,amount,locationOrMethod:document.getElementById("incomeLocation").value,date:document.getElementById("incomeDate").value||new Date().toISOString().slice(0,10)}); persistLocal(); renderAll(); document.getElementById("incomeAmount").value=""; document.getElementById("incomeCategory").value=""; updateIncomeSubCat(); checkIncomeValid(); }
+    function addExpense() { let amount=parseFloat(document.getElementById("expenseAmount").value); if(isNaN(amount)||amount<=0) return; transactions.push({id:Date.now(),type:"expense",category:document.getElementById("expenseCategory").value,subCategory:document.getElementById("expenseSubCat").value,amount,locationOrMethod:document.getElementById("expenseMethod").value,date:document.getElementById("expenseDate").value||new Date().toISOString().slice(0,10)}); persistLocal(); renderAll(); document.getElementById("expenseAmount").value=""; document.getElementById("expenseCategory").value=""; updateExpenseSubCat(); checkExpenseValid(); }
     function deleteTransaction(id) { if(confirm("Remove transaction?")) { transactions=transactions.filter(t=>t.id!==id); persistLocal(); renderAll(); } }
     function startEdit(id) { editModeId=id; renderAll(); }
-    function saveEdit(id) {
-        let newAmt=parseFloat(document.getElementById(`edit_amount_${id}`)?.value);
-        if(isNaN(newAmt)||newAmt<=0) return;
-        let txn=transactions.find(t=>t.id===id);
-        if(txn) { txn.amount=newAmt; txn.date=document.getElementById(`edit_date_${id}`)?.value||txn.date; editModeId=null; persistLocal(); renderAll(); }
-    }
+    function saveEdit(id) { let newAmt=parseFloat(document.getElementById(`edit_amount_${id}`)?.value); if(isNaN(newAmt)||newAmt<=0) return; let txn=transactions.find(t=>t.id===id); if(txn){ txn.amount=newAmt; txn.date=document.getElementById(`edit_date_${id}`)?.value||txn.date; editModeId=null; persistLocal(); renderAll(); } }
     function cancelEdit() { editModeId=null; renderAll(); }
 
     function getStartOfWeek(date) { let d=new Date(date); let day=d.getDay(); let diff=(day>=5)?(day-5):(day+2); d.setDate(d.getDate()-diff); d.setHours(0,0,0,0); return d; }
-    function getFilteredByPeriod(period) {
-        let now=new Date(), start, end;
-        if(period==="daily") { start=new Date(now.getFullYear(),now.getMonth(),now.getDate()); end=new Date(start.getTime()+86400000); }
-        else if(period==="weekly") { start=getStartOfWeek(now); end=new Date(start); end.setDate(start.getDate()+7); }
-        else if(period==="monthly") { start=new Date(now.getFullYear(),now.getMonth(),1); end=new Date(now.getFullYear(),now.getMonth()+1,1); }
-        else { start=new Date(now.getFullYear(),0,1); end=new Date(now.getFullYear()+1,0,1); }
-        return transactions.filter(t=>{ let d=new Date(t.date); return d>=start && d<end; });
+    function getFilteredByPeriod(period, typeFilter=currentTypeFilter) { let now=new Date(), start,end; if(period==="daily"){start=new Date(now.getFullYear(),now.getMonth(),now.getDate()); end=new Date(start.getTime()+86400000);} else if(period==="weekly"){start=getStartOfWeek(now); end=new Date(start); end.setDate(start.getDate()+7);} else if(period==="monthly"){start=new Date(now.getFullYear(),now.getMonth(),1); end=new Date(now.getFullYear(),now.getMonth()+1,1);} else {start=new Date(now.getFullYear(),0,1); end=new Date(now.getFullYear()+1,0,1);}
+        let filtered=transactions.filter(t=>{let d=new Date(t.date); return d>=start && d<end;});
+        if(typeFilter==="income") filtered=filtered.filter(t=>t.type==="income");
+        else if(typeFilter==="expense") filtered=filtered.filter(t=>t.type==="expense");
+        return filtered;
     }
 
-    function drawBar(incData, expData, labels) {
-        const ctx=document.getElementById('barChart').getContext('2d');
-        if(barChart) barChart.destroy();
-        barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:incData,backgroundColor:'#34c759',borderRadius:12,barPercentage:0.7},{label:'Expense',data:expData,backgroundColor:'#ff3b30',borderRadius:12,barPercentage:0.7}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString()+' ৳'}}}}});
-    }
+    function drawBar(incData, expData, labels) { const ctx=document.getElementById('barChart').getContext('2d'); if(barChart) barChart.destroy(); barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:incData,backgroundColor:'#34c759',borderRadius:12,barPercentage:0.7},{label:'Expense',data:expData,backgroundColor:'#ff3b30',borderRadius:12,barPercentage:0.7}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString()+' ৳'}}}}})}
 
-    function updateChartAndPeriodStats(period) {
-        const filtered=getFilteredByPeriod(period);
-        if(period==="daily") {
-            let inc=0,exp=0; filtered.forEach(t=>t.type==="income"?inc+=t.amount:exp+=t.amount);
-            drawBar([inc],[exp],["Today"]);
-            document.getElementById("periodIncome").innerText=inc.toLocaleString();
-            document.getElementById("periodExpense").innerText=exp.toLocaleString();
-            document.getElementById("periodSavings").innerText=(inc-exp).toLocaleString();
-        } else if(period==="weekly") {
-            let start=getStartOfWeek(new Date()),days=["Fri","Sat","Sun","Mon","Tue","Wed","Thu"];
-            let incArr=Array(7).fill(0),expArr=Array(7).fill(0);
-            filtered.forEach(t=>{ let diff=Math.floor((new Date(t.date)-start)/(86400000)); if(diff>=0&&diff<7) t.type==="income"?incArr[diff]+=t.amount:expArr[diff]+=t.amount; });
-            drawBar(incArr,expArr,days);
-            let ti=incArr.reduce((a,b)=>a+b,0),te=expArr.reduce((a,b)=>a+b,0);
-            document.getElementById("periodIncome").innerText=ti.toLocaleString();
-            document.getElementById("periodExpense").innerText=te.toLocaleString();
-            document.getElementById("periodSavings").innerText=(ti-te).toLocaleString();
-        } else if(period==="monthly") {
-            let dim=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
-            let incArr=Array(dim).fill(0),expArr=Array(dim).fill(0);
-            filtered.forEach(t=>{ let day=new Date(t.date).getDate()-1; if(day>=0&&day<dim) t.type==="income"?incArr[day]+=t.amount:expArr[day]+=t.amount; });
-            let labels=dim>25?Array.from({length:dim},(_,i)=>i%3===0?(i+1).toString():""):Array.from({length:dim},(_,i)=>(i+1).toString());
-            drawBar(incArr,expArr,labels);
-            let ti=incArr.reduce((a,b)=>a+b,0),te=expArr.reduce((a,b)=>a+b,0);
-            document.getElementById("periodIncome").innerText=ti.toLocaleString();
-            document.getElementById("periodExpense").innerText=te.toLocaleString();
-            document.getElementById("periodSavings").innerText=(ti-te).toLocaleString();
-        } else {
-            let monthlyInc=Array(12).fill(0),monthlyExp=Array(12).fill(0);
-            filtered.forEach(t=>{ let m=new Date(t.date).getMonth(); t.type==="income"?monthlyInc[m]+=t.amount:monthlyExp[m]+=t.amount; });
-            drawBar(monthlyInc,monthlyExp,["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]);
-            let ti=monthlyInc.reduce((a,b)=>a+b,0),te=monthlyExp.reduce((a,b)=>a+b,0);
-            document.getElementById("periodIncome").innerText=ti.toLocaleString();
-            document.getElementById("periodExpense").innerText=te.toLocaleString();
-            document.getElementById("periodSavings").innerText=(ti-te).toLocaleString();
-        }
-    }
+    function updateChartAndPeriodStats(period, typeFilter) { const filtered=getFilteredByPeriod(period, typeFilter); if(period==="daily"){ let inc=0,exp=0; filtered.forEach(t=>t.type==="income"?inc+=t.amount:exp+=t.amount); drawBar([inc],[exp],["Today"]); document.getElementById("periodIncome").innerText=inc.toLocaleString(); document.getElementById("periodExpense").innerText=exp.toLocaleString(); document.getElementById("periodSavings").innerText=(inc-exp).toLocaleString(); } else if(period==="weekly"){ let start=getStartOfWeek(new Date()),days=["Fri","Sat","Sun","Mon","Tue","Wed","Thu"]; let incArr=Array(7).fill(0),expArr=Array(7).fill(0); filtered.forEach(t=>{let diff=Math.floor((new Date(t.date)-start)/(86400000)); if(diff>=0&&diff<7) t.type==="income"?incArr[diff]+=t.amount:expArr[diff]+=t.amount;}); drawBar(incArr,expArr,days); let ti=incArr.reduce((a,b)=>a+b,0),te=expArr.reduce((a,b)=>a+b,0); document.getElementById("periodIncome").innerText=ti.toLocaleString(); document.getElementById("periodExpense").innerText=te.toLocaleString(); document.getElementById("periodSavings").innerText=(ti-te).toLocaleString(); } else if(period==="monthly"){ let dim=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate(); let incArr=Array(dim).fill(0),expArr=Array(dim).fill(0); filtered.forEach(t=>{let day=new Date(t.date).getDate()-1; if(day>=0&&day<dim) t.type==="income"?incArr[day]+=t.amount:expArr[day]+=t.amount;}); let labels=dim>25?Array.from({length:dim},(_,i)=>i%3===0?(i+1).toString():""):Array.from({length:dim},(_,i)=>(i+1).toString()); drawBar(incArr,expArr,labels); let ti=incArr.reduce((a,b)=>a+b,0),te=expArr.reduce((a,b)=>a+b,0); document.getElementById("periodIncome").innerText=ti.toLocaleString(); document.getElementById("periodExpense").innerText=te.toLocaleString(); document.getElementById("periodSavings").innerText=(ti-te).toLocaleString(); } else { let monthlyInc=Array(12).fill(0),monthlyExp=Array(12).fill(0); filtered.forEach(t=>{let m=new Date(t.date).getMonth(); t.type==="income"?monthlyInc[m]+=t.amount:monthlyExp[m]+=t.amount;}); drawBar(monthlyInc,monthlyExp,["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]); let ti=monthlyInc.reduce((a,b)=>a+b,0),te=monthlyExp.reduce((a,b)=>a+b,0); document.getElementById("periodIncome").innerText=ti.toLocaleString(); document.getElementById("periodExpense").innerText=te.toLocaleString(); document.getElementById("periodSavings").innerText=(ti-te).toLocaleString(); } }
 
-    function renderTransactionTable(period) {
-        let filtered=getFilteredByPeriod(period);
-        filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
-        const tbody=document.getElementById("transactionList");
-        tbody.innerHTML="";
-        filtered.forEach(t => {
-            let editing=(editModeId===t.id);
-            let row=tbody.insertRow();
-            row.className=t.type==="income"?"income-row":"expense-row";
-            if(editing) {
-                row.insertCell(0).innerHTML=`<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:88px; font-size:0.7rem;">`;
-                row.insertCell(1).innerHTML=t.type==="income"?"📈":"📉";
-                row.insertCell(2).innerHTML=t.category;
-                row.insertCell(3).innerHTML=t.subCategory;
-                row.insertCell(4).innerHTML=`<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:85px">`;
-                row.insertCell(5).innerHTML=`<button class="mini-btn save-mini" onclick="saveEdit(${t.id})">Save</button><button class="mini-btn cancel-mini" onclick="cancelEdit()">Cancel</button>`;
-            } else {
-                row.insertCell(0).innerText=t.date;
-                row.insertCell(1).innerText=t.type==="income"?"📈 Income":"📉 Expense";
-                row.insertCell(2).innerText=t.category;
-                row.insertCell(3).innerText=t.subCategory;
-                row.insertCell(4).innerText=t.amount.toLocaleString()+" ৳";
-                row.insertCell(5).innerHTML=`<button class="mini-btn edit-mini" onclick="startEdit(${t.id})">Edit</button><button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`;
-            }
-        });
-        updateChartAndPeriodStats(period);
-    }
+    function renderTransactionTable(period, typeFilter, page=1) { let filtered=getFilteredByPeriod(period, typeFilter); filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)); const totalPages=Math.ceil(filtered.length/PAGE_SIZE)||1; const startIdx=(page-1)*PAGE_SIZE; const paginated=filtered.slice(startIdx, startIdx+PAGE_SIZE); const tbody=document.getElementById("transactionList"); tbody.innerHTML=""; paginated.forEach(t=>{ let editing=(editModeId===t.id); let row=tbody.insertRow(); row.className=t.type==="income"?"income-row":"expense-row"; if(editing){ row.insertCell(0).innerHTML=`<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:88px; font-size:0.7rem;">`; row.insertCell(1).innerHTML=t.type==="income"?"📈":"📉"; row.insertCell(2).innerHTML=t.category; row.insertCell(3).innerHTML=t.subCategory; row.insertCell(4).innerHTML=`<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:85px">`; row.insertCell(5).innerHTML=`<button class="mini-btn save-mini" onclick="saveEdit(${t.id})">Save</button><button class="mini-btn cancel-mini" onclick="cancelEdit()">Cancel</button>`; } else { row.insertCell(0).innerText=t.date; row.insertCell(1).innerText=t.type==="income"?"📈 Income":"📉 Expense"; row.insertCell(2).innerText=t.category; row.insertCell(3).innerText=t.subCategory; row.insertCell(4).innerText=t.amount.toLocaleString()+" ৳"; row.insertCell(5).innerHTML=`<button class="mini-btn edit-mini" onclick="startEdit(${t.id})">Edit</button><button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`; } });
+    document.getElementById("pageInfo").innerText=`Page ${page} of ${totalPages}`; document.getElementById("prevPageBtn").disabled=(page===1); document.getElementById("nextPageBtn").disabled=(page===totalPages); currentPage=page; updateChartAndPeriodStats(period, typeFilter); }
 
-    function setPeriod(period) {
-        currentPeriod=period;
-        document.querySelectorAll(".segment-btn").forEach(btn=>{ if(btn.getAttribute("data-period")===period) btn.classList.add("active"); else btn.classList.remove("active"); });
-        renderTransactionTable(currentPeriod);
-    }
+    function setPeriod(period) { currentPeriod=period; document.querySelectorAll(".segment-btn").forEach(btn=>{if(btn.getAttribute("data-period")===period) btn.classList.add("active"); else btn.classList.remove("active");}); currentPage=1; renderTransactionTable(currentPeriod, currentTypeFilter, 1); }
+    function setTypeFilter(type) { currentTypeFilter=type; document.querySelectorAll(".type-btn").forEach(btn=>{if(btn.getAttribute("data-type")===type) btn.classList.add("active-type"); else btn.classList.remove("active-type");}); currentPage=1; renderTransactionTable(currentPeriod, currentTypeFilter, 1); }
+    function nextPage() { const filtered=getFilteredByPeriod(currentPeriod, currentTypeFilter); const totalPages=Math.ceil(filtered.length/PAGE_SIZE)||1; if(currentPage<totalPages) renderTransactionTable(currentPeriod, currentTypeFilter, currentPage+1); }
+    function prevPage() { if(currentPage>1) renderTransactionTable(currentPeriod, currentTypeFilter, currentPage-1); }
+    function renderAll() { updateStatsUI(); renderTransactionTable(currentPeriod, currentTypeFilter, currentPage); }
 
-    function renderAll() { updateStatsUI(); renderTransactionTable(currentPeriod); }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-        loadFromLocal();
-        let today=new Date().toISOString().slice(0,10);
-        if(!document.getElementById("incomeDate").value) document.getElementById("incomeDate").value=today;
-        if(!document.getElementById("expenseDate").value) document.getElementById("expenseDate").value=today;
-        updateIncomeSubCat(); updateExpenseSubCat();
-        document.getElementById("incomeCategory").addEventListener("change",()=>{updateIncomeSubCat();checkIncomeValid();});
-        document.getElementById("incomeSubCat").addEventListener("change",checkIncomeValid);
-        document.getElementById("incomeAmount").addEventListener("input",checkIncomeValid);
-        document.getElementById("incomeDate").addEventListener("change",checkIncomeValid);
-        document.getElementById("expenseCategory").addEventListener("change",()=>{updateExpenseSubCat();checkExpenseValid();});
-        document.getElementById("expenseSubCat").addEventListener("change",checkExpenseValid);
-        document.getElementById("expenseAmount").addEventListener("input",checkExpenseValid);
-        document.getElementById("expenseDate").addEventListener("change",checkExpenseValid);
-        document.getElementById("addIncomeBtn").addEventListener("click",addIncome);
-        document.getElementById("addExpenseBtn").addEventListener("click",addExpense);
-        document.querySelectorAll(".segment-btn").forEach(btn=>btn.addEventListener("click",()=>setPeriod(btn.getAttribute("data-period"))));
-        document.getElementById("forceSyncBtn").addEventListener("click",syncWithCloud);
-        document.getElementById("exportBtn").addEventListener("click",()=>{
-            let dataStr=JSON.stringify(transactions,null,2);
-            let blob=new Blob([dataStr],{type:"application/json"});
-            let a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`bdt_backup_${today}.json`; a.click(); URL.revokeObjectURL(blob);
-        });
-        document.getElementById("importBtn").addEventListener("click",()=>{
-            let inp=document.createElement("input"); inp.type="file"; inp.accept="application/json";
-            inp.onchange=e=>{ let f=e.target.files[0]; if(!f) return; let rd=new FileReader(); rd.onload=async ev=>{ try{ let imp=JSON.parse(ev.target.result); transactions=Array.isArray(imp)?imp:imp.transactions||[]; await persistLocal(); renderAll(); alert("✓ imported"); }catch(e){ alert("invalid file"); } }; rd.readAsText(f); };
-            inp.click();
-        });
-        checkIncomeValid(); checkExpenseValid();
-        renderAll();
-        await syncWithCloud();
-    });
+    document.addEventListener("DOMContentLoaded", async () => { loadFromLocal(); let today=new Date().toISOString().slice(0,10); if(!document.getElementById("incomeDate").value) document.getElementById("incomeDate").value=today; if(!document.getElementById("expenseDate").value) document.getElementById("expenseDate").value=today; updateIncomeSubCat(); updateExpenseSubCat(); document.getElementById("incomeCategory").addEventListener("change",()=>{updateIncomeSubCat();checkIncomeValid();}); document.getElementById("incomeSubCat").addEventListener("change",checkIncomeValid); document.getElementById("incomeAmount").addEventListener("input",checkIncomeValid); document.getElementById("incomeDate").addEventListener("change",checkIncomeValid); document.getElementById("expenseCategory").addEventListener("change",()=>{updateExpenseSubCat();checkExpenseValid();}); document.getElementById("expenseSubCat").addEventListener("change",checkExpenseValid); document.getElementById("expenseAmount").addEventListener("input",checkExpenseValid); document.getElementById("expenseDate").addEventListener("change",checkExpenseValid); document.getElementById("addIncomeBtn").addEventListener("click",addIncome); document.getElementById("addExpenseBtn").addEventListener("click",addExpense); document.querySelectorAll(".segment-btn").forEach(btn=>btn.addEventListener("click",()=>setPeriod(btn.getAttribute("data-period")))); document.querySelectorAll(".type-btn").forEach(btn=>btn.addEventListener("click",()=>setTypeFilter(btn.getAttribute("data-type")))); document.getElementById("forceSyncBtn").addEventListener("click",syncWithCloud); document.getElementById("exportBtn").addEventListener("click",()=>{let dataStr=JSON.stringify(transactions,null,2); let blob=new Blob([dataStr],{type:"application/json"}); let a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`bdt_backup_${today}.json`; a.click(); URL.revokeObjectURL(blob);}); document.getElementById("importBtn").addEventListener("click",()=>{let inp=document.createElement("input"); inp.type="file"; inp.accept="application/json"; inp.onchange=e=>{let f=e.target.files[0]; if(!f) return; let rd=new FileReader(); rd.onload=async ev=>{try{let imp=JSON.parse(ev.target.result); transactions=Array.isArray(imp)?imp:imp.transactions||[]; await persistLocal(); renderAll(); alert("✓ imported");}catch(e){alert("invalid file");}}; rd.readAsText(f);}; inp.click();}); document.getElementById("prevPageBtn").addEventListener("click",prevPage); document.getElementById("nextPageBtn").addEventListener("click",nextPage); checkIncomeValid(); checkExpenseValid(); renderAll(); await syncWithCloud(); });
 </script>
 </body>
 </html>
