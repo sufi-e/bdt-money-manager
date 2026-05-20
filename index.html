@@ -389,7 +389,7 @@
                 </select>
                 <input type="date" id="incomeDate" class="required-field">
             </div>
-            <div class="field-hint">⚠️ Category, Sub-Category, Amount, and Date are required</div>
+            <div class="field-hint"> </div>
             <button id="addIncomeBtn" class="add-btn" disabled>➕ Add Income</button>
             <div id="incomeValidationMsg" class="validation-message"></div>
             <div class="summary-stats">
@@ -432,7 +432,7 @@
                 </select>
                 <input type="date" id="expenseDate" class="required-field">
             </div>
-            <div class="field-hint">⚠️ Category, Sub-Category, Amount, and Date are required</div>
+            <div class="field-hint"> </div>
             <button id="addExpenseBtn" class="add-btn" disabled>➖ Add Expense</button>
             <div id="expenseValidationMsg" class="validation-message"></div>
             <div class="summary-stats">
@@ -591,13 +591,13 @@
         } else {
             addBtn.disabled = true;
             if (!category || !subCategory) {
-                validationMsg.innerHTML = "⚠️ Please select both Category and Sub-Category";
+                validationMsg.innerHTML = "";
             } else if (!amount || parseFloat(amount) <= 0) {
-                validationMsg.innerHTML = "⚠️ Please enter a valid amount (greater than 0)";
+                validationMsg.innerHTML = "";
             } else if (!date) {
-                validationMsg.innerHTML = "⚠️ Please select a date";
+                validationMsg.innerHTML = "";
             } else {
-                validationMsg.innerHTML = "⚠️ Please fill all required fields";
+                validationMsg.innerHTML = "";
             }
             validationMsg.style.display = "block";
         }
