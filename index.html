@@ -331,12 +331,102 @@
     function updateStatsUI() { let totalInc=0,totalExp=0,bankTotal=0,cashTotal=0; transactions.forEach(t=>{ if(t.type==="income"){totalInc+=t.amount; if(t.locationOrMethod==="Bank") bankTotal+=t.amount; else if(t.locationOrMethod==="Cash") cashTotal+=t.amount;} else if(t.type==="expense"){totalExp+=t.amount;} /* transfers skipped — they don't change net worth */ }); document.getElementById("totalIncomeSum").innerText=totalInc.toLocaleString(); document.getElementById("totalExpenseSum").innerText=totalExp.toLocaleString(); document.getElementById("bankTotal").innerText=bankTotal.toLocaleString(); document.getElementById("cashTotal").innerText=cashTotal.toLocaleString(); const {bankBalance,cashBalance}=calculateBankCashBalance(); document.getElementById("totalBalance").innerText=(bankBalance+cashBalance).toLocaleString(); updateBankCashUI(); }
 
     function updateLastModifiedUI() { let lm=localStorage.getItem("bdt_last_modified"); if(lm){let d=new Date(lm); document.getElementById("lastModifiedDisplay").innerHTML=`last sync ${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;}else document.getElementById("lastModifiedDisplay").innerHTML=`last sync just now`; }
-    async function getGitHubToken() { let token=localStorage.getItem("github_token"); if(!token){let t=prompt("🔐 GitHub token (repo scope) – optional."); if(t) localStorage.setItem("github_token",t);} return localStorage.getItem("github_token"); }
-    async function loadFromGitHub() { const token=await getGitHubToken(); if(!token) return null; try{const res=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{headers:{"Authorization":`token ${token}`}}); if(res.ok){const data=await res.json(); const content=JSON.parse(atob(data.content)); return {transactions:content.transactions,timestamp:content.timestamp};}}catch(e){} return null; }
-    async function saveToGitHub(dataTx) { const token=localStorage.getItem("github_token"); if(!token) return false; const content={transactions:dataTx,timestamp:new Date().toISOString()}; const encoded=btoa(JSON.stringify(content)); let sha=null; try{const getRes=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{headers:{"Authorization":`token ${token}`}}); if(getRes.ok){const d=await getRes.json(); sha=d.sha;}}catch(e){} const body={message:`update ${new Date().toISOString()}`,content:encoded,branch:"main"}; if(sha) body.sha=sha; const resp=await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`,{method:"PUT",headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)}); return resp.ok; }
-    async function syncWithCloud() { const statusDiv=document.getElementById("syncStatus"); statusDiv.innerHTML="⟳ syncing..."; const localData=localStorage.getItem("bdt_money_manager"); const localTime=localStorage.getItem("bdt_last_modified")||"0"; const cloud=await loadFromGitHub(); if(cloud&&cloud.transactions){const cloudTime=cloud.timestamp||"0"; if(new Date(cloudTime)>new Date(localTime)){transactions=cloud.transactions; localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",cloudTime); statusDiv.innerHTML="☁️ restored"; renderAll();}else if(new Date(localTime)>new Date(cloudTime)&&localData){if(await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified",new Date().toISOString()); statusDiv.innerHTML="📤 backed up";}else statusDiv.innerHTML="✓ synced";} else if(localData){if(await saveToGitHub(transactions)) localStorage.setItem("bdt_last_modified",new Date().toISOString()); statusDiv.innerHTML="📤 cloud saved";} else statusDiv.innerHTML="💾 local"; updateLastModifiedUI(); setTimeout(()=>statusDiv.innerHTML=localStorage.getItem("github_token")?"☁️ auto‑sync":"💾 local",2000); }
+
+    // Safe base64 encode/decode that handles Unicode (Bengali ৳ etc.)
+    function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
+    function fromB64(b64) { return decodeURIComponent(escape(atob(b64))); }
+
+    function getToken() { return localStorage.getItem("github_token") || ""; }
+
+    function promptToken() {
+        const t = prompt("🔐 Enter your GitHub Personal Access Token (repo scope):\n\nGet one at: github.com → Settings → Developer settings → Personal access tokens\n\nLeave blank to use local-only mode.");
+        if(t && t.trim()) { localStorage.setItem("github_token", t.trim()); return t.trim(); }
+        return "";
+    }
+
+    async function loadFromGitHub() {
+        const token = getToken();
+        if(!token) return null;
+        try {
+            const res = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+            });
+            if(res.status === 401) { localStorage.removeItem("github_token"); setSyncStatus("🔐 token invalid"); return null; }
+            if(res.status === 404) return null; // file doesn't exist yet, that's fine
+            if(!res.ok) { setSyncStatus("⚠️ fetch error "+res.status); return null; }
+            const data = await res.json();
+            const content = JSON.parse(fromB64(data.content.replace(/\n/g,"")));
+            return { transactions: content.transactions || [], timestamp: content.timestamp || "0", sha: data.sha };
+        } catch(e) { setSyncStatus("⚠️ "+e.message); return null; }
+    }
+
+    async function saveToGitHub(dataTx, existingSha) {
+        const token = getToken();
+        if(!token) return false;
+        try {
+            const payload = JSON.stringify({ transactions: dataTx, timestamp: new Date().toISOString() });
+            const encoded = toB64(payload);
+            // Always fetch fresh sha to avoid conflicts
+            let sha = existingSha || null;
+            if(!sha) {
+                const check = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                    headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+                });
+                if(check.ok) { const d = await check.json(); sha = d.sha; }
+            }
+            const body = { message: `bdt-sync ${new Date().toISOString()}`, content: encoded, branch: "main" };
+            if(sha) body.sha = sha;
+            const resp = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/data.json`, {
+                method: "PUT",
+                headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
+                body: JSON.stringify(body)
+            });
+            if(resp.status === 401) { localStorage.removeItem("github_token"); setSyncStatus("🔐 token invalid"); return false; }
+            if(resp.status === 409) { setSyncStatus("⚠️ conflict — retrying..."); return await saveToGitHub(dataTx, null); } // sha mismatch, retry
+            return resp.ok;
+        } catch(e) { setSyncStatus("⚠️ save failed"); return false; }
+    }
+
+    function setSyncStatus(msg, autoReset=true) {
+        const el = document.getElementById("syncStatus");
+        el.innerHTML = msg;
+        if(autoReset) setTimeout(()=> el.innerHTML = getToken() ? "☁️ auto‑sync" : "💾 local only", 3000);
+    }
+
+    async function syncWithCloud() {
+        const token = getToken();
+        if(!token) { setSyncStatus("💾 local only", false); return; }
+        setSyncStatus("⟳ syncing...", false);
+        const localTime = localStorage.getItem("bdt_last_modified") || "0";
+        try {
+            const cloud = await loadFromGitHub();
+            if(cloud && cloud.transactions && cloud.transactions.length > 0) {
+                const cloudTime = cloud.timestamp || "0";
+                if(new Date(cloudTime) > new Date(localTime)) {
+                    // Cloud is newer — pull down
+                    transactions = cloud.transactions;
+                    localStorage.setItem("bdt_money_manager", JSON.stringify(transactions));
+                    localStorage.setItem("bdt_last_modified", cloudTime);
+                    setSyncStatus("☁️ restored from cloud");
+                    renderAll();
+                } else {
+                    // Local is same or newer — push up
+                    const ok = await saveToGitHub(transactions, cloud.sha);
+                    setSyncStatus(ok ? "📤 backed up" : "⚠️ backup failed");
+                    if(ok) localStorage.setItem("bdt_last_modified", new Date().toISOString());
+                }
+            } else {
+                // No cloud data yet — push local up
+                const ok = await saveToGitHub(transactions, null);
+                setSyncStatus(ok ? "📤 first upload done" : "⚠️ upload failed");
+                if(ok) localStorage.setItem("bdt_last_modified", new Date().toISOString());
+            }
+        } catch(e) { setSyncStatus("⚠️ sync error"); }
+        updateLastModifiedUI();
+    }
+
     function loadFromLocal() { const stored=localStorage.getItem("bdt_money_manager"); if(stored) transactions=JSON.parse(stored); else { const today=new Date().toISOString().slice(0,10); transactions=[{id:Date.now()+1,type:"income",category:"Office",subCategory:"Salary",amount:55000,locationOrMethod:"Bank",date:today},{id:Date.now()+2,type:"expense",category:"Food",subCategory:"Restaurant",amount:1200,locationOrMethod:"Cash",date:today},{id:Date.now()+3,type:"income",category:"DPS",subCategory:"Monthly Deposit",amount:5000,locationOrMethod:"Bank",date:today}]; localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",new Date().toISOString()); } updateLastModifiedUI(); }
-    async function persistLocal() { localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",new Date().toISOString()); updateLastModifiedUI(); updateStatsUI(); if(localStorage.getItem("github_token")) await saveToGitHub(transactions); }
+    async function persistLocal() { localStorage.setItem("bdt_money_manager",JSON.stringify(transactions)); localStorage.setItem("bdt_last_modified",new Date().toISOString()); updateLastModifiedUI(); updateStatsUI(); if(getToken()) { const ok=await saveToGitHub(transactions, null); if(!ok) setSyncStatus("⚠️ cloud save failed"); } }
 
     function addIncome() { let amount=parseFloat(document.getElementById("incomeAmount").value); if(isNaN(amount)||amount<=0) return; transactions.push({id:Date.now(),type:"income",category:document.getElementById("incomeCategory").value,subCategory:document.getElementById("incomeSubCat").value,amount,locationOrMethod:document.getElementById("incomeLocation").value,date:document.getElementById("incomeDate").value||new Date().toISOString().slice(0,10)}); persistLocal(); renderAll(); document.getElementById("incomeAmount").value=""; document.getElementById("incomeCategory").value=""; updateIncomeSubCat(); checkIncomeValid(); }
     function addExpense() { let amount=parseFloat(document.getElementById("expenseAmount").value); if(isNaN(amount)||amount<=0) return; transactions.push({id:Date.now(),type:"expense",category:document.getElementById("expenseCategory").value,subCategory:document.getElementById("expenseSubCat").value,amount,locationOrMethod:document.getElementById("expenseMethod").value,date:document.getElementById("expenseDate").value||new Date().toISOString().slice(0,10)}); persistLocal(); renderAll(); document.getElementById("expenseAmount").value=""; document.getElementById("expenseCategory").value=""; updateExpenseSubCat(); checkExpenseValid(); }
@@ -611,7 +701,13 @@
             });
         });
 
-        document.getElementById("forceSyncBtn").addEventListener("click",syncWithCloud);
+        document.getElementById("forceSyncBtn").addEventListener("click", async () => {
+            if(!getToken()) {
+                const t = promptToken();
+                if(!t) { setSyncStatus("💾 local only", false); return; }
+            }
+            await syncWithCloud();
+        });
 
         // Transfer controls
         document.getElementById("transferSwapBtn").addEventListener("click", () => {
@@ -630,7 +726,10 @@
         document.getElementById("prevPageBtn").addEventListener("click",prevPage);
         document.getElementById("nextPageBtn").addEventListener("click",nextPage);
         checkIncomeValid(); checkExpenseValid(); renderAll();
-        await syncWithCloud();
+        // Show correct initial badge
+        document.getElementById("syncStatus").innerHTML = getToken() ? "☁️ auto‑sync" : "💾 local only";
+        // Only auto-sync if token already saved — never prompt silently on load
+        if(getToken()) await syncWithCloud();
     });
 </script>
 </body>
