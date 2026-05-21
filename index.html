@@ -65,7 +65,7 @@
         .save-mini { background: #34c759; color: white; }
         .cancel-mini { background: #e9e9ef; color: #8e8e93; }
         .period-stats { display: flex; justify-content: center; gap: 16px; margin: 12px 20px 20px; flex-wrap: wrap; }
-        canvas { width: 100% !important; }
+        canvas { max-height: 330px; width: 100% !important; }
         .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin: 20px 20px 20px; padding-top: 8px; border-top: 0.5px solid #e9ecef; }
         .page-btn { background: #f2f2f7; border: none; padding: 8px 16px; border-radius: 32px; font-weight: 500; font-size: 0.8rem; cursor: pointer; transition: all 0.1s; }
         .page-btn:active { transform: scale(0.96); }
@@ -127,57 +127,19 @@
         .transfer-row { background-color: rgba(120,80,255,0.05) !important; }
 
         @media (max-width: 700px) {
-            body { padding: 8px; }
-            .app-container { border-radius: 28px; }
-            .container-inner { padding: 16px 12px 24px; }
-            .two-col { grid-template-columns: 1fr; gap: 16px; }
-            .header-row { flex-direction: column; align-items: stretch; gap: 10px; }
+            body { padding: 12px; }
+            .container-inner { padding: 18px 16px 24px; }
+            .two-col { grid-template-columns: 1fr; gap: 20px; }
+            .header-row { flex-direction: column; align-items: stretch; }
             .status-group { align-items: flex-start; }
-            .balance-pill { align-self: stretch; text-align: center; }
-            .segment { flex-wrap: nowrap; overflow-x: auto; }
-            .segment-btn { padding: 6px 11px; font-size: 0.68rem; white-space: nowrap; }
-            .type-btn { padding: 5px 10px; font-size: 0.68rem; }
-            .money-amount { font-size: 1.4rem; }
+            .balance-pill { align-self: center; width: fit-content; }
+            .segment-btn { padding: 6px 12px; font-size: 0.7rem; }
+            .transaction-table { font-size: 0.7rem; }
+            .money-amount { font-size: 1.5rem; }
             .cat-content { flex-direction: column; }
             .transfer-body { flex-direction: column; align-items: stretch; }
-            .transfer-from-to { min-width: unset; }
-            .transfer-inputs { min-width: unset; }
-            .transfer-btn { width: 100%; }
-            /* Chart: fixed height, no clip */
-            .chart-panel { padding: 16px 12px; }
-            .chart-panel canvas { max-height: 220px !important; height: 220px !important; }
-            /* Hide table on mobile, show cards instead */
-            .transaction-table { display: none; }
-            .tx-cards { display: flex; flex-direction: column; gap: 10px; padding: 0 4px 8px; }
-            .filter-bar { padding: 14px 12px 8px; gap: 8px; }
-            .period-stats { margin: 8px 12px 16px; gap: 8px; }
-            .pagination { margin: 12px; gap: 10px; }
         }
-        @media (min-width: 701px) {
-            .tx-cards { display: none; }
-        }
-        /* Mobile transaction cards */
-        .tx-card { background: #fff; border-radius: 18px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03); }
-        .tx-card.income-card { border-left: 4px solid #34c759; }
-        .tx-card.expense-card { border-left: 4px solid #ff3b30; }
-        .tx-card.transfer-card-row { border-left: 4px solid #7b5cf5; }
-        .tx-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .tx-card-label { font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
-        .tx-card-label.inc { background: #e6f9ed; color: #1a8c3a; }
-        .tx-card-label.exp { background: #ffeeed; color: #c0392b; }
-        .tx-card-label.trf { background: #f0ecff; color: #5b21b6; }
-        .tx-card-amount { font-size: 1.05rem; font-weight: 700; color: #1c1c1e; }
-        .tx-card-meta { font-size: 0.72rem; color: #6c6c70; margin-bottom: 10px; }
-        .tx-card-actions { display: flex; gap: 8px; }
-        .tx-card-actions button { flex: 1; padding: 9px 0; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: none; cursor: pointer; }
-        .tx-edit-btn { background: #e9f1ff; color: #007aff; }
-        .tx-del-btn  { background: #ffeceb; color: #ff3b30; }
-        .tx-save-btn { background: #34c759; color: white; }
-        .tx-cancel-btn { background: #e9e9ef; color: #636366; }
-        /* Edit mode card inputs */
-        .tx-edit-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-        .tx-edit-row input { flex: 1; min-width: 100px; background: #f9f9fb; border: 1px solid #e3e4e8; border-radius: 12px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; outline: none; }
-        .tx-edit-row input:focus { border-color: #007aff; }
+    </style>
 </head>
 <body>
 <div class="app-container">
@@ -314,7 +276,6 @@
                         <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Sub‑category</th><th>Amount</th><th>Actions</th></tr></thead>
                         <tbody id="transactionList"></tbody>
                     </table>
-                    <div class="tx-cards" id="txCardList"></div>
                 </div>
                 <div class="pagination" id="paginationControls">
                     <button class="page-btn" id="prevPageBtn">← Previous</button>
@@ -329,9 +290,7 @@
             </div>
             <div class="chart-panel">
                 <h3 style="font-weight: 590; margin-bottom: 12px;">📊 Income vs Expense</h3>
-                <div style="position:relative; height:300px;">
-                    <canvas id="barChart"></canvas>
-                </div>
+                <canvas id="barChart"></canvas>
                 <div style="text-align:center; font-size: 0.7rem; margin-top: 12px; color:#8e8e93;">🟢 Income &nbsp; 🔴 Expense</div>
             </div>
         </div>
@@ -618,128 +577,12 @@
     }
     // ══ END CATEGORY BREAKDOWN ══
 
-    function drawBar(incData, expData, labels) {
-        const ctx = document.getElementById('barChart').getContext('2d');
-        if(barChart) barChart.destroy();
-        barChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels, datasets: [
-                { label:'Income',  data: incData, backgroundColor:'#34c759', borderRadius: 8, barPercentage: 0.7 },
-                { label:'Expense', data: expData, backgroundColor:'#ff3b30', borderRadius: 8, barPercentage: 0.7 }
-            ]},
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position:'top', labels:{ boxWidth:12, font:{size:11} } } },
-                scales: {
-                    x: { ticks: { font:{size:10}, maxRotation: 45 } },
-                    y: { beginAtZero: true, ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v, font:{size:10} } }
-                }
-            }
-        });
-    }
+    function drawBar(incData, expData, labels) { const ctx=document.getElementById('barChart').getContext('2d'); if(barChart) barChart.destroy(); barChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Income',data:incData,backgroundColor:'#34c759',borderRadius:12,barPercentage:0.7},{label:'Expense',data:expData,backgroundColor:'#ff3b30',borderRadius:12,barPercentage:0.7}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString()+' ৳'}}}}})}
+
     function updateChartAndPeriodStats(period, typeFilter) { const filtered=getFilteredByPeriod(period, typeFilter); if(period==="daily"){ let inc=0,exp=0; filtered.forEach(t=>{if(t.type==="income") inc+=t.amount; else if(t.type==="expense") exp+=t.amount;}); drawBar([inc],[exp],["Today"]); document.getElementById("periodIncome").innerText=inc.toLocaleString(); document.getElementById("periodExpense").innerText=exp.toLocaleString(); document.getElementById("periodSavings").innerText=(inc-exp).toLocaleString(); } else if(period==="weekly"){ let start=getStartOfWeek(new Date()),days=["Fri","Sat","Sun","Mon","Tue","Wed","Thu"]; let incArr=Array(7).fill(0),expArr=Array(7).fill(0); filtered.forEach(t=>{let diff=Math.floor((new Date(t.date)-start)/(86400000)); if(diff>=0&&diff<7){if(t.type==="income") incArr[diff]+=t.amount; else if(t.type==="expense") expArr[diff]+=t.amount;}}); drawBar(incArr,expArr,days); let ti=incArr.reduce((a,b)=>a+b,0),te=expArr.reduce((a,b)=>a+b,0); document.getElementById("periodIncome").innerText=ti.toLocaleString(); document.getElementById("periodExpense").innerText=te.toLocaleString(); document.getElementById("periodSavings").innerText=(ti-te).toLocaleString(); } else if(period==="monthly"){ let dim=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate(); let incArr=Array(dim).fill(0),expArr=Array(dim).fill(0); filtered.forEach(t=>{let day=new Date(t.date).getDate()-1; if(day>=0&&day<dim){if(t.type==="income") incArr[day]+=t.amount; else if(t.type==="expense") expArr[day]+=t.amount;}}); let labels=dim>25?Array.from({length:dim},(_,i)=>i%3===0?(i+1).toString():""):Array.from({length:dim},(_,i)=>(i+1).toString()); drawBar(incArr,expArr,labels); let ti=incArr.reduce((a,b)=>a+b,0),te=expArr.reduce((a,b)=>a+b,0); document.getElementById("periodIncome").innerText=ti.toLocaleString(); document.getElementById("periodExpense").innerText=te.toLocaleString(); document.getElementById("periodSavings").innerText=(ti-te).toLocaleString(); } else { let monthlyInc=Array(12).fill(0),monthlyExp=Array(12).fill(0); filtered.forEach(t=>{let m=new Date(t.date).getMonth(); if(t.type==="income") monthlyInc[m]+=t.amount; else if(t.type==="expense") monthlyExp[m]+=t.amount;}); drawBar(monthlyInc,monthlyExp,["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]); let ti=monthlyInc.reduce((a,b)=>a+b,0),te=monthlyExp.reduce((a,b)=>a+b,0); document.getElementById("periodIncome").innerText=ti.toLocaleString(); document.getElementById("periodExpense").innerText=te.toLocaleString(); document.getElementById("periodSavings").innerText=(ti-te).toLocaleString(); } }
 
-    function renderTransactionTable(period, typeFilter, page=1) {
-        let filtered = getFilteredByPeriod(period, typeFilter);
-        filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
-        const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
-        const startIdx = (page-1) * PAGE_SIZE;
-        const paginated = filtered.slice(startIdx, startIdx + PAGE_SIZE);
-        const tbody = document.getElementById("transactionList");
-        const cardList = document.getElementById("txCardList");
-        tbody.innerHTML = "";
-        cardList.innerHTML = "";
-
-        paginated.forEach(t => {
-            const editing = (editModeId === t.id);
-
-            // ── DESKTOP TABLE ROW ──
-            const row = tbody.insertRow();
-            if(t.type==="transfer") row.className="transfer-row";
-            else row.className = t.type==="income" ? "income-row" : "expense-row";
-
-            if(t.type==="transfer") {
-                row.insertCell(0).innerText = t.date;
-                row.insertCell(1).innerText = "🔄 Transfer";
-                row.insertCell(2).innerText = t.locationOrMethod+" → "+t.transferTo;
-                row.insertCell(3).innerText = t.subCategory;
-                row.insertCell(4).innerText = t.amount.toLocaleString()+" ৳";
-                row.insertCell(5).innerHTML = `<button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`;
-            } else if(editing) {
-                row.insertCell(0).innerHTML = `<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:88px;font-size:0.7rem;">`;
-                row.insertCell(1).innerHTML = t.type==="income" ? "📈" : "📉";
-                row.insertCell(2).innerHTML = t.category;
-                row.insertCell(3).innerHTML = t.subCategory;
-                row.insertCell(4).innerHTML = `<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:85px">`;
-                row.insertCell(5).innerHTML = `<button class="mini-btn save-mini" onclick="saveEdit(${t.id})">Save</button><button class="mini-btn cancel-mini" onclick="cancelEdit()">Cancel</button>`;
-            } else {
-                row.insertCell(0).innerText = t.date;
-                row.insertCell(1).innerText = t.type==="income" ? "📈 Income" : "📉 Expense";
-                row.insertCell(2).innerText = t.category;
-                row.insertCell(3).innerText = t.subCategory;
-                row.insertCell(4).innerText = t.amount.toLocaleString()+" ৳";
-                row.insertCell(5).innerHTML = `<button class="mini-btn edit-mini" onclick="startEdit(${t.id})">Edit</button><button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`;
-            }
-
-            // ── MOBILE CARD ──
-            const card = document.createElement("div");
-            const cardType = t.type==="transfer" ? "transfer-card-row" : (t.type==="income" ? "income-card" : "expense-card");
-            card.className = "tx-card " + cardType;
-
-            if(t.type==="transfer") {
-                card.innerHTML = `
-                    <div class="tx-card-top">
-                        <span class="tx-card-label trf">🔄 Transfer</span>
-                        <span class="tx-card-amount">${t.amount.toLocaleString()} ৳</span>
-                    </div>
-                    <div class="tx-card-meta">${t.date} &nbsp;·&nbsp; ${t.locationOrMethod} → ${t.transferTo}</div>
-                    <div class="tx-card-actions">
-                        <button class="tx-del-btn" onclick="deleteTransaction(${t.id})">🗑 Delete</button>
-                    </div>`;
-            } else if(editing) {
-                card.innerHTML = `
-                    <div class="tx-card-top">
-                        <span class="tx-card-label ${t.type==='income'?'inc':'exp'}">${t.type==='income'?'📈 Income':'📉 Expense'}</span>
-                        <span style="font-size:0.72rem;color:#8e8e93;">${t.category} · ${t.subCategory}</span>
-                    </div>
-                    <div class="tx-edit-row">
-                        <input type="number" id="medit_amount_${t.id}" value="${t.amount}" placeholder="Amount">
-                        <input type="date"   id="medit_date_${t.id}"   value="${t.date}">
-                    </div>
-                    <div class="tx-card-actions">
-                        <button class="tx-save-btn"   onclick="saveMobileEdit(${t.id})">✓ Save</button>
-                        <button class="tx-cancel-btn" onclick="cancelEdit()">✕ Cancel</button>
-                    </div>`;
-            } else {
-                card.innerHTML = `
-                    <div class="tx-card-top">
-                        <span class="tx-card-label ${t.type==='income'?'inc':'exp'}">${t.type==='income'?'📈 Income':'📉 Expense'}</span>
-                        <span class="tx-card-amount">${t.amount.toLocaleString()} ৳</span>
-                    </div>
-                    <div class="tx-card-meta">${t.date} &nbsp;·&nbsp; ${t.category} → ${t.subCategory}</div>
-                    <div class="tx-card-actions">
-                        <button class="tx-edit-btn" onclick="startEdit(${t.id})">✏️ Edit</button>
-                        <button class="tx-del-btn"  onclick="deleteTransaction(${t.id})">🗑 Delete</button>
-                    </div>`;
-            }
-            cardList.appendChild(card);
-        });
-
-        document.getElementById("pageInfo").innerText = `Page ${page} of ${totalPages}`;
-        document.getElementById("prevPageBtn").disabled = (page === 1);
-        document.getElementById("nextPageBtn").disabled = (page === totalPages);
-        currentPage = page;
-        updateChartAndPeriodStats(period, typeFilter);
-    }
-
-    function saveMobileEdit(id) {
-        const newAmt  = parseFloat(document.getElementById(`medit_amount_${id}`)?.value);
-        const newDate = document.getElementById(`medit_date_${id}`)?.value;
-        if(isNaN(newAmt) || newAmt <= 0) return;
-        const txn = transactions.find(t => t.id === id);
-        if(txn) { txn.amount = newAmt; if(newDate) txn.date = newDate; editModeId = null; persistLocal(); renderAll(); }
-    }
+    function renderTransactionTable(period, typeFilter, page=1) { let filtered=getFilteredByPeriod(period, typeFilter); filtered.sort((a,b)=>new Date(b.date)-new Date(a.date)); const totalPages=Math.ceil(filtered.length/PAGE_SIZE)||1; const startIdx=(page-1)*PAGE_SIZE; const paginated=filtered.slice(startIdx, startIdx+PAGE_SIZE); const tbody=document.getElementById("transactionList"); tbody.innerHTML=""; paginated.forEach(t=>{ let editing=(editModeId===t.id); let row=tbody.insertRow(); if(t.type==="transfer") row.className="transfer-row"; else row.className=t.type==="income"?"income-row":"expense-row"; if(t.type==="transfer"){ row.insertCell(0).innerText=t.date; row.insertCell(1).innerText="🔄 Transfer"; row.insertCell(2).innerText=t.locationOrMethod+" → "+t.transferTo; row.insertCell(3).innerText=t.subCategory; row.insertCell(4).innerText=t.amount.toLocaleString()+" ৳"; let actCell=row.insertCell(5); actCell.innerHTML=`<button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`; } else if(editing){ row.insertCell(0).innerHTML=`<input type="date" id="edit_date_${t.id}" value="${t.date}" style="width:88px; font-size:0.7rem;">`; row.insertCell(1).innerHTML=t.type==="income"?"📈":"📉"; row.insertCell(2).innerHTML=t.category; row.insertCell(3).innerHTML=t.subCategory; row.insertCell(4).innerHTML=`<input type="number" id="edit_amount_${t.id}" value="${t.amount}" style="width:85px">`; row.insertCell(5).innerHTML=`<button class="mini-btn save-mini" onclick="saveEdit(${t.id})">Save</button><button class="mini-btn cancel-mini" onclick="cancelEdit()">Cancel</button>`; } else { row.insertCell(0).innerText=t.date; row.insertCell(1).innerText=t.type==="income"?"📈 Income":"📉 Expense"; row.insertCell(2).innerText=t.category; row.insertCell(3).innerText=t.subCategory; row.insertCell(4).innerText=t.amount.toLocaleString()+" ৳"; row.insertCell(5).innerHTML=`<button class="mini-btn edit-mini" onclick="startEdit(${t.id})">Edit</button><button class="mini-btn delete-mini" onclick="deleteTransaction(${t.id})">Del</button>`; } });
+    document.getElementById("pageInfo").innerText=`Page ${page} of ${totalPages}`; document.getElementById("prevPageBtn").disabled=(page===1); document.getElementById("nextPageBtn").disabled=(page===totalPages); currentPage=page; updateChartAndPeriodStats(period, typeFilter); }
 
     function setPeriod(period) { currentPeriod=period; document.querySelectorAll(".segment-btn").forEach(btn=>{if(btn.getAttribute("data-period")===period) btn.classList.add("active"); else btn.classList.remove("active");}); currentPage=1; renderTransactionTable(currentPeriod, currentTypeFilter, 1); }
     function setTypeFilter(type) { currentTypeFilter=type; document.querySelectorAll(".type-btn").forEach(btn=>{if(btn.getAttribute("data-type")===type) btn.classList.add("active-type"); else btn.classList.remove("active-type");}); currentPage=1; renderTransactionTable(currentPeriod, currentTypeFilter, 1); }
